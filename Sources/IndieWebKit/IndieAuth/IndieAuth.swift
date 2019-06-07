@@ -12,13 +12,11 @@ public class IndieAuth {
     static public func isValidProfile(string: String) -> Bool {
         let urlOfString = URL(string: string);
         
-        return false;
-        
-//        guard let url = urlOfString else {
-//            return false;
-//        }
-//
-//        return IndieAuth.isValidProfile(url: url);
+        guard let url = urlOfString else {
+            return false;
+        }
+
+        return IndieAuth.isValidProfile(url: url);
     }
     
     static public func isValidProfile(url: URL) -> Bool {
