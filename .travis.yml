@@ -1,5 +1,7 @@
 language: objective-c
 os: osx
 osx_image: xcode10.2
-script:
-  - swift test
+xcode_scheme: IndieWebKit
+xcode_workspace: .swiftpm/xcode/package.xcworkspace
+install:
+  - swift build
