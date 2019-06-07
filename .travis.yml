@@ -5,3 +5,7 @@ xcode_scheme: IndieWebKit
 xcode_workspace: .swiftpm/xcode/package.xcworkspace
 install:
   - swift build
+notifications:
+  email:
+    on_success: change
+    on_failure: change
