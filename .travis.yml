@@ -1,4 +1,4 @@
 language: objective-c
 os: osx
 xcode_scheme: IndieWebKit
-xcode_project: .swiftpm/xcode/package.xcworkspace
+xcode_workspace: .swiftpm/xcode/package.xcworkspace
