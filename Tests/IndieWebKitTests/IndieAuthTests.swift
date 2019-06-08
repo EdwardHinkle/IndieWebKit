@@ -11,11 +11,11 @@ final class IndieAuthTests: XCTestCase {
         let valid_profile_5 = "http://[::1]/";
 
 
-        XCTAssertEqual(IndieAuth.isValidProfile(string: valid_profile_1), true)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: valid_profile_2), true)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: valid_profile_3), true)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: valid_profile_4), true)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: valid_profile_5), true)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(valid_profile_1), true)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(valid_profile_2), true)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(valid_profile_3), true)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(valid_profile_4), true)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(valid_profile_5), true)
     }
 
     func testInvalidProfileUrls() {
@@ -29,14 +29,14 @@ final class IndieAuthTests: XCTestCase {
         let invalid_profile_8 = "https://example.com/foo/./bar" // contains a single-dot path
 
 
-        XCTAssertEqual(IndieAuth.isValidProfile(string: invalid_profile_1), false)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: invalid_profile_2), false)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: invalid_profile_3), false)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: invalid_profile_4), false)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: invalid_profile_5), false)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: invalid_profile_6), false)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: invalid_profile_7), false)
-        XCTAssertEqual(IndieAuth.isValidProfile(string: invalid_profile_8), false)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(invalid_profile_1), false)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(invalid_profile_2), false)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(invalid_profile_3), false)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(invalid_profile_4), false)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(invalid_profile_5), false)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(invalid_profile_6), false)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(invalid_profile_7), false)
+        XCTAssertEqual(IndieAuth.checkForValidProfile(invalid_profile_8), false)
     }
     
 //    func testNormalizeHostnameUrl() {

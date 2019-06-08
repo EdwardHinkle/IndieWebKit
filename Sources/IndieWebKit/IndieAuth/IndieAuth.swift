@@ -11,38 +11,43 @@ import Network
 public class IndieAuth {
     
     /// Convienance method to check if a given string is a valid IndieAuth profile
+    ///
     /// - Parameter string: a string representation of an IndieAuth url profile
-    static public func isValidProfile(string: String) -> Bool {
+    /// - Author: Eddie Hinkle
+    static public func checkForValidProfile(_ profile: String) -> Bool {
         
-        guard let url = URL(string: string) else {
+        guard let profileUrl = URL(string: profile) else {
             // An IndieAuth profile is not valid if it's not a url
             return false;
         }
 
-        return IndieAuth.isValidProfile(url: url);
+        return IndieAuth.checkForValidProfile(profileUrl);
     }
     
-    /// Checks if a given url is valid for the purpose of representing an IndieAuth profile
+    /// Checks if a given url is valid for the purpose of representing an IndieAuth profile.
+    ///
     /// Logic for a valid profile comes from ths spec here: https://indieauth.spec.indieweb.org/#user-profile-url
+    ///
     /// - Parameter url: an IndieAuth profile url
-    static public func isValidProfile(url: URL) -> Bool {
+    /// - Author: Eddie Hinkle
+    static public func checkForValidProfile(_ profile: URL) -> Bool {
         // If the url is so badly formed it can't be turned into components, it definitely isn't valid
-        guard let urlComp = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+        guard let profileComponents = URLComponents(url: profile, resolvingAgainstBaseURL: false) else {
             return false;
         }
         
         // Profile URLs MUST have either an https or http scheme
-        guard urlComp.scheme != nil && (urlComp.scheme == "http" || urlComp.scheme == "https") else {
+        guard profileComponents.scheme != nil && (profileComponents.scheme == "http" || profileComponents.scheme == "https") else {
             return false;
         }
         
         // MUST contain a path component (/ is a valid path),
-        guard urlComp.path != "" else {
+        guard profileComponents.path != "" else {
             return false;
         }
         
         // MUST NOT contain single-dot or double-dot path segments
-        guard !urlComp.path.contains(".") && !urlComp.path.contains("..") else {
+        guard !profileComponents.path.contains(".") && !profileComponents.path.contains("..") else {
             return false;
         }
         
@@ -50,23 +55,23 @@ public class IndieAuth {
         // I don't think we need to do anything special to check this
         
         // MUST NOT contain a fragment component
-        guard urlComp.fragment == nil else {
+        guard profileComponents.fragment == nil else {
             return false;
         }
         
         // MUST NOT contain a username or password component
-        guard urlComp.user == nil && urlComp.password == nil else {
+        guard profileComponents.user == nil && profileComponents.password == nil else {
             return false;
         }
         
         // MUST NOT contain a port.
-        guard urlComp.port == nil else {
+        guard profileComponents.port == nil else {
             return false;
         }
         
         // Additionally, hostnames MUST be domain names and MUST NOT be ipv4 or ipv6 addresses.
         if #available(OSX 10.14, *) {
-            guard let hostname = urlComp.host else {
+            guard let hostname = profileComponents.host else {
                 return false;
             }
             
@@ -84,7 +89,9 @@ public class IndieAuth {
     }
     
     /// Convienance method to normalize a given string and convert it into a Url for use as an IndieAuth Profile
+    ///
     /// - Parameter string: a string representation of an IndieAuth url profile
+    /// - Author: Eddie Hinkle
 //    static public func normalizeProfileUrl(string: String) -> URL? {
 //
 //        guard let url = URL(string: string) else {
@@ -96,8 +103,11 @@ public class IndieAuth {
 //    }
     
     /// Normalize the profile url based on IndieAuth spec
-    /// https://indieauth.spec.indieweb.org/#url-canonicalization
+    ///
+    /// Logic comes from https://indieauth.spec.indieweb.org/#url-canonicalization
+    ///
     /// - Parameter url: an IndieAuth profile url
+    /// - Author: Eddie Hinkle
 //    static public func normalizeProfileUrl(url: URL) -> URL? {
 //        guard let originalUrl = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
 //            return nil;
