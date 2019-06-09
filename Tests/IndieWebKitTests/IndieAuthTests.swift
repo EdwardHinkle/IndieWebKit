@@ -39,15 +39,45 @@ final class IndieAuthTests: XCTestCase {
         XCTAssertEqual(IndieAuth.checkForValidProfile(invalid_profile_8), false)
     }
     
+    // TODO: Uncomment normalize hostname test when that function is build
 //    func testNormalizeHostnameUrl() {
-//        let hostname = "example.com";
+//        let hostnameOnly = "example.com"
+//        let hostnameWithScheme = "https://example.com"
+//        let hostnameWithPath = "example.com/"
 //
-//        XCTAssertEqual(IndieAuth.normalizeProfileUrl(string: hostname), URL(string: "http://example.com/"))
+//        XCTAssertEqual(IndieAuth.normalizeProfileUrl(hostnameOnly), URL(string: "http://example.com/"))
+//        XCTAssertEqual(IndieAuth.normalizeProfileUrl(hostnameWithScheme), URL(string: "https://example.com/"))
+//        XCTAssertEqual(IndieAuth.normalizeProfileUrl(hostnameWithPath), URL(string: "http://example.com/"))
 //    }
+    
+    func testProfileDiscoveryRedirection() {
+        let urlWithRedirect = URL(string: "https://aaronpk.com/")! // This url will redirect using a 301
+        let urlWithoutRedirect = URL(string: "https://eddiehinkle.com/")! // This url should remain the same
+        
+        let expectationWithRedirect = self.expectation(description: "ProfileDiscoveryRequestWithRedirect")
+        let discoveryWithRedirect = ProfileDiscoveryRequest(for: urlWithRedirect)
+        discoveryWithRedirect.start {
+            print("Check profile url after discovery request: \(discoveryWithRedirect.profile)")
+            XCTAssertEqual(discoveryWithRedirect.profile, URL(string: "https://aaronparecki.com/")!)
+            expectationWithRedirect.fulfill()
+        }
+        
+        let expectationWithoutRedirect = self.expectation(description: "ProfileDiscoveryRequestWithoutRedirect")
+        let discoveryWithoutRedirect = ProfileDiscoveryRequest(for: urlWithoutRedirect)
+        discoveryWithoutRedirect.start {
+            print("Check profile url after discovery request: \(discoveryWithoutRedirect.profile)")
+            XCTAssertEqual(discoveryWithoutRedirect.profile, URL(string: "https://eddiehinkle.com/")!)
+            expectationWithoutRedirect.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+    }
     
     static var allTests = [
         ("Test Valid Profile Urls", testValidProfileUrls),
         ("Test Invalid Profile Urls", testInvalidProfileUrls),
-//        ("Test Normalized Profile Urls", testNormalizeHostnameUrl),
+        //("Test Normalized Profile Urls", testNormalizeHostnameUrl),
+        ("Test Profile Discovery", testProfileDiscoveryRedirection),
     ]
 }
