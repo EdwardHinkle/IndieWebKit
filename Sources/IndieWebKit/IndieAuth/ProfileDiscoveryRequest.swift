@@ -36,7 +36,8 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
                         let endpointUrl = URL(string: endpoint) {
                         
                         EndpointType.allCases.forEach { endpointType in
-                            if linkHeader.contains("rel=\"\(endpointType)\"") {
+                            // Only use value if it is the FIRST instance of a predefined endpointType
+                            if self.endpoints[endpointType] == nil && linkHeader.contains("rel=\"\(endpointType)\"") {
                                 self.endpoints[endpointType] = endpointUrl
                             }
                         }

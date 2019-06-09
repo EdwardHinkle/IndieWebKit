@@ -129,6 +129,8 @@ final class IndieAuthTests: XCTestCase {
         waitForExpectations(timeout: 5, handler: nil)
     }
     
+    // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used
+    
     static var allTests = [
         ("Test Valid Profile Urls", testValidProfileUrls),
         ("Test Invalid Profile Urls", testInvalidProfileUrls),
