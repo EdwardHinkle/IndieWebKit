@@ -15,17 +15,14 @@ import Foundation
 public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
     
     private(set) public var profile: URL
-    private(set) public var endpoints: ProfileEndpoints?
+    private(set) public var endpoints: [EndpointType: URL?] = [:]
     
     init(for profile: URL) {
         self.profile = profile
-        endpoints = nil
     }
     
     public func start(completion: @escaping (() -> ())) {
         self.fetchSiteData { response, html in
-            
-            self.endpoints = ProfileEndpoints()
             
             if response.allHeaderFields["Link"] != nil {
                 let httpLinkHeadersString = response.allHeaderFields["Link"] as! String
@@ -38,22 +35,11 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
                                             .replacingOccurrences(of: "( |<|>)", with: "", options: .regularExpression), // We want to remove any non-url characters
                         let endpointUrl = URL(string: endpoint) {
                         
-                            if linkHeader.contains("rel=\"authorization_endpoint\"") {
-                                self.endpoints?.authorization_endpoint = endpointUrl
+                        EndpointType.allCases.forEach { endpointType in
+                            if linkHeader.contains("rel=\"\(endpointType)\"") {
+                                self.endpoints[endpointType] = endpointUrl
                             }
-                            if linkHeader.contains("rel=\"token_endpoint\"") {
-                                self.endpoints?.token_endpoint = endpointUrl
-                            }
-                            if linkHeader.contains("rel=\"micropub\"") {
-                                self.endpoints?.micropub_endpoint = endpointUrl
-                            }
-                            if linkHeader.contains("rel=\"microsub\"") {
-                                self.endpoints?.microsub_endpoint = endpointUrl
-                            }
-                            if linkHeader.contains("rel=\"webmention\"") {
-                                self.endpoints?.webmention_endpoint = endpointUrl
-                            }
-                        
+                        }
                     }
                 }
             }

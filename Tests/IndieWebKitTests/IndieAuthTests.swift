@@ -77,10 +77,10 @@ final class IndieAuthTests: XCTestCase {
     func testProfileDiscoveryEndpointsHTTPLink() {
         
         let profile = URL(string: "https://aaronpk.com")!
-        let profileKnownEndpoints = ProfileEndpoints(authorization_endpoint: URL(string: "https://aaronparecki.com/auth")!,
-                                                     token_endpoint: URL(string: "https://aaronparecki.com/auth/token")!,
-                                                     micropub_endpoint: URL(string: "https://aaronparecki.com/micropub")!,
-                                                     microsub_endpoint: URL(string: "https://aperture.p3k.io/microsub/1")!)
+        let profileKnownEndpoints = [EndpointType.authorization_endpoint: URL(string: "https://aaronparecki.com/auth")!,
+                                     EndpointType.token_endpoint: URL(string: "https://aaronparecki.com/auth/token")!,
+                                     EndpointType.micropub: URL(string: "https://aaronparecki.com/micropub")!,
+                                     EndpointType.microsub: URL(string: "https://aperture.p3k.io/microsub/1")!]
         let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
         let discovery = ProfileDiscoveryRequest(for: profile)
         discovery.start {
@@ -94,11 +94,11 @@ final class IndieAuthTests: XCTestCase {
     func testProfileDiscoveryEndpointsHTML() {
         
         let profile = URL(string: "https://eddiehinkle.com/")!
-        let profileKnownEndpoints = ProfileEndpoints(authorization_endpoint: URL(string: "https://eddiehinkle.com/auth")!,
-                                                     token_endpoint: URL(string: "https://eddiehinkle.com/auth/token")!,
-                                                     micropub_endpoint: URL(string: "https://eddiehinkle.com/micropub")!,
-                                                     microsub_endpoint: URL(string: "https://aperture.eddiehinkle.com/microsub/1")!,
-                                                     webmention_endpoint: URL(string: "https://webmention.io/eddiehinkle.com/webmention")!)
+        let profileKnownEndpoints = [EndpointType.authorization_endpoint: URL(string: "https://eddiehinkle.com/auth")!,
+                                     EndpointType.token_endpoint: URL(string: "https://eddiehinkle.com/auth/token")!,
+                                     EndpointType.micropub: URL(string: "https://eddiehinkle.com/micropub")!,
+                                     EndpointType.microsub: URL(string: "https://aperture.eddiehinkle.com/microsub/1")!,
+                                     EndpointType.webmention: URL(string: "https://webmention.io/eddiehinkle.com/webmention")!]
         let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
         let discovery = ProfileDiscoveryRequest(for: profile)
         discovery.start {
@@ -114,11 +114,11 @@ final class IndieAuthTests: XCTestCase {
     func testProfileDiscoveryEndpointsBoth() {
         
         let profile = URL(string: "https://aaronpk.com")!
-        let profileKnownEndpoints = ProfileEndpoints(authorization_endpoint: URL(string: "https://aaronparecki.com/auth")!,
-                                                     token_endpoint: URL(string: "https://aaronparecki.com/auth/token")!,
-                                                     micropub_endpoint: URL(string: "https://aaronparecki.com/micropub")!,
-                                                     microsub_endpoint: URL(string: "https://aperture.p3k.io/microsub/1")!,
-                                                     webmention_endpoint: URL(string: "https://webmention.io/aaronpk/webmention")!)
+        let profileKnownEndpoints = [EndpointType.authorization_endpoint: URL(string: "https://aaronparecki.com/auth")!,
+                                     EndpointType.token_endpoint: URL(string: "https://aaronparecki.com/auth/token")!,
+                                     EndpointType.micropub: URL(string: "https://aaronparecki.com/micropub")!,
+                                     EndpointType.microsub: URL(string: "https://aperture.p3k.io/microsub/1")!,
+                                     EndpointType.webmention: URL(string: "https://webmention.io/aaronpk/webmention")!]
         let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
         let discovery = ProfileDiscoveryRequest(for: profile)
         discovery.start {
