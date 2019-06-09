@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftSoup
 
 /// Fetch a user's IndieAuth profile url and discovery endpoints for signing in based how how we want to sign in
 ///
@@ -22,7 +23,7 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
     }
     
     public func start(completion: @escaping (() -> ())) {
-        self.fetchSiteData { response, html in
+        self.fetchSiteData { response, htmlData in
             
             if response.allHeaderFields["Link"] != nil {
                 let httpLinkHeadersString = response.allHeaderFields["Link"] as! String
@@ -45,7 +46,19 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
                 }
             }
             
-            // TODO: Check html for rel-links
+            if htmlData != nil, let html = String(data: htmlData!, encoding: .utf8)   {
+                do {
+                    let _: Document = try SwiftSoup.parse(html)
+                    
+                    // TODO: Loop through EndpointTypes, then look for those that are still nil in the HTML
+                    
+                    
+                } catch Exception.Error(_, let message) {
+                    print(message)
+                } catch {
+                    print("error")
+                }
+            }
             
             completion()
         }
