@@ -7,12 +7,13 @@
 
 import Foundation
 import Network
+import SwiftSoup
 
 public class IndieAuth {
     
     /// Convienance method to check if a given string is a valid IndieAuth profile
     ///
-    /// - Parameter string: a string representation of an IndieAuth url profile
+    /// - Parameter profile: a string representation of an IndieAuth url profile
     /// - Author: Eddie Hinkle
     static public func checkForValidProfile(_ profile: String) -> Bool {
         
@@ -28,7 +29,7 @@ public class IndieAuth {
     ///
     /// Logic for a valid profile comes from ths spec here: https://indieauth.spec.indieweb.org/#user-profile-url
     ///
-    /// - Parameter url: an IndieAuth profile url
+    /// - Parameter profile: an IndieAuth profile url
     /// - Author: Eddie Hinkle
     static public func checkForValidProfile(_ profile: URL) -> Bool {
         // If the url is so badly formed it can't be turned into components, it definitely isn't valid
@@ -70,18 +71,16 @@ public class IndieAuth {
         }
         
         // Additionally, hostnames MUST be domain names and MUST NOT be ipv4 or ipv6 addresses.
-        if #available(OSX 10.14, *) {
-            guard let hostname = profileComponents.host else {
-                return false;
-            }
-            
-            guard IPv4Address(hostname) == nil || hostname == "127.0.0.1" else {
-                return false;
-            }
-            
-            guard IPv6Address(hostname) == nil || hostname == "[::1]" else {
-                return false;
-            }
+        guard let hostname = profileComponents.host else {
+            return false;
+        }
+        
+        guard IPv4Address(hostname) == nil || hostname == "127.0.0.1" else {
+            return false;
+        }
+        
+        guard IPv6Address(hostname) == nil || hostname == "[::1]" else {
+            return false;
         }
         
         // If we made it here, we must have a legit profile! 🙌
@@ -90,59 +89,51 @@ public class IndieAuth {
     
     /// Convienance method to normalize a given string and convert it into a Url for use as an IndieAuth Profile
     ///
-    /// - Parameter string: a string representation of an IndieAuth url profile
+    /// - Parameter profile: a string representation of an IndieAuth url profile
     /// - Author: Eddie Hinkle
-//    static public func normalizeProfileUrl(string: String) -> URL? {
-//
-//        guard let url = URL(string: string) else {
-//            // An IndieAuth profile is not valid if it's not a url
-//            return nil;
-//        }
-//
-//        return IndieAuth.normalizeProfileUrl(url: url);
-//    }
+    static public func normalizeProfileUrl(_ profile: String) -> URL? {
+
+        guard let profileUrl = URL(string: profile) else {
+            // An IndieAuth profile is not valid if it's not a url
+            return nil;
+        }
+
+        return IndieAuth.normalizeProfileUrl(profileUrl);
+    }
     
     /// Normalize the profile url based on IndieAuth spec
     ///
     /// Logic comes from https://indieauth.spec.indieweb.org/#url-canonicalization
     ///
-    /// - Parameter url: an IndieAuth profile url
+    /// - Parameter profile: an IndieAuth profile url
     /// - Author: Eddie Hinkle
-//    static public func normalizeProfileUrl(url: URL) -> URL? {
-//        guard let originalUrl = URLComponents(url: url, resolvingAgainstBaseURL: true) else {
+    static public func normalizeProfileUrl(_ profile: URL) -> URL? {
+//        guard let sourceProfile = URLComponents(url: profile, resolvingAgainstBaseURL: true) else {
 //            return nil;
 //        }
-//
-//        var normalizedUrl = URLComponents()
-//
-//        normalizedUrl.host = originalUrl.host
-//        normalizedUrl.query = originalUrl.query
-//
-//        // If no scheme exists, add http
-//        if originalUrl.scheme == nil {
-//            normalizedUrl.scheme = "http"
-//        } else {
-//            normalizedUrl.scheme = originalUrl.scheme
-//        }
-//
-//        if originalUrl.path {
-//            normalizedUrl.path = originalUrl.path
-//        } else {
-//            normalizedUrl.path = "/"
-//        }
-//
-//        // If path is empty, we append / as the path
-////        if originalUrl.path || originalUrl.path == "" {
-////            normalizedUrl.path = "/"
-////        } else {
-////            normalizedUrl.path = originalUrl.path
-////        }
-//
-//        return normalizedUrl.url
-//    }
+        let normalizedProfile = profile
+
+        // If no scheme exists, add http
+        if profile.scheme == nil {
+            // TODO: Add default http scheme
+        }
+
+        // TODO: Check for non-existent path and add "/" to the end
+        // URLComponents.path doesn't seem to work because it is assumed to be a string
+
+        return normalizedProfile
+    }
     
-//    static public func discoverProfileEndpoints(url: URL) -> void {
-//        // TODO: Follow https://indieauth.spec.indieweb.org/#discovery-by-clients
-//    }
+    /// Fetch a user's IndieAuth profile url and discovery endpoints for signing in based how how we want to sign in
+    ///
+    /// Logic follows https://indieauth.spec.indieweb.org/#discovery-by-clients
+    /// - Parameter profile: an IndieAuth profile url
+    static public func discoverProfileEndpoints(from profile: URL) {
+        
+        
+        // Check the link headers for rel
+        
+        
+    }
     
 }
