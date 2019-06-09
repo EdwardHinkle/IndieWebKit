@@ -74,10 +74,68 @@ final class IndieAuthTests: XCTestCase {
         
     }
     
+    func testProfileDiscoveryEndpointsHTTPLink() {
+        
+        let profile = URL(string: "https://aaronpk.com")!
+        let profileKnownEndpoints = ProfileEndpoints(authorization_endpoint: URL(string: "https://aaronparecki.com/auth")!,
+                                                     token_endpoint: URL(string: "https://aaronparecki.com/auth/token")!,
+                                                     micropub_endpoint: URL(string: "https://aaronparecki.com/micropub")!,
+                                                     microsub_endpoint: URL(string: "https://aperture.p3k.io/microsub/1")!)
+        let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
+        let discovery = ProfileDiscoveryRequest(for: profile)
+        discovery.start {
+            XCTAssertEqual(discovery.endpoints, profileKnownEndpoints)
+            expectation.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    func testProfileDiscoveryEndpointsHTML() {
+        
+        let profile = URL(string: "https://eddiehinkle.com/")!
+        let profileKnownEndpoints = ProfileEndpoints(authorization_endpoint: URL(string: "https://eddiehinkle.com/auth")!,
+                                                     token_endpoint: URL(string: "https://eddiehinkle.com/auth/token")!,
+                                                     micropub_endpoint: URL(string: "https://eddiehinkle.com/micropub")!,
+                                                     microsub_endpoint: URL(string: "https://aperture.eddiehinkle.com/microsub/1")!,
+                                                     webmention_endpoint: URL(string: "https://webmention.io/eddiehinkle.com/webmention")!)
+        let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
+        let discovery = ProfileDiscoveryRequest(for: profile)
+        discovery.start {
+            XCTAssertEqual(discovery.endpoints, profileKnownEndpoints)
+            expectation.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // This test is a good one, because all the endpoints are in the HTTP Link headers EXCEPT the webmention endpoint, that is located in the HTML
+    // So if this test fails there is either something wrong with the Link header code OR the HTML parsing code
+    func testProfileDiscoveryEndpointsBoth() {
+        
+        let profile = URL(string: "https://aaronpk.com")!
+        let profileKnownEndpoints = ProfileEndpoints(authorization_endpoint: URL(string: "https://aaronparecki.com/auth")!,
+                                                     token_endpoint: URL(string: "https://aaronparecki.com/auth/token")!,
+                                                     micropub_endpoint: URL(string: "https://aaronparecki.com/micropub")!,
+                                                     microsub_endpoint: URL(string: "https://aperture.p3k.io/microsub/1")!,
+                                                     webmention_endpoint: URL(string: "https://webmention.io/aaronpk/webmention")!)
+        let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
+        let discovery = ProfileDiscoveryRequest(for: profile)
+        discovery.start {
+            XCTAssertEqual(discovery.endpoints, profileKnownEndpoints)
+            expectation.fulfill()
+        }
+    
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
     static var allTests = [
         ("Test Valid Profile Urls", testValidProfileUrls),
         ("Test Invalid Profile Urls", testInvalidProfileUrls),
         //("Test Normalized Profile Urls", testNormalizeHostnameUrl),
         ("Test Profile Discovery", testProfileDiscoveryRedirection),
+        ("Test Profile Discovery Endpoints for HTTP Link", testProfileDiscoveryEndpointsHTTPLink),
+        ("Test Profile Discovery Endpoints for HTML", testProfileDiscoveryEndpointsHTML),
+        ("Test Profile Discovery Endpoint Both", testProfileDiscoveryEndpointsBoth)
     ]
 }

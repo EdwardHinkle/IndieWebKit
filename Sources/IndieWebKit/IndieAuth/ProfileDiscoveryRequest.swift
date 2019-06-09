@@ -14,8 +14,8 @@ import Foundation
 /// Logic follows https://indieauth.spec.indieweb.org/#discovery-by-clients
 public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
     
-    public var profile: URL
-    private var endpoints: ProfileEndpoints?
+    private(set) public var profile: URL
+    private(set) public var endpoints: ProfileEndpoints?
     
     init(for profile: URL) {
         self.profile = profile
@@ -50,6 +50,9 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
                             if linkHeader.contains("rel=\"microsub\"") {
                                 self.endpoints?.microsub_endpoint = endpointUrl
                             }
+                            if linkHeader.contains("rel=\"webmention\"") {
+                                self.endpoints?.webmention_endpoint = endpointUrl
+                            }
                         
                     }
                 }
@@ -57,7 +60,6 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
             
             // TODO: Check html for rel-links
             
-            print(self.endpoints)
             completion()
         }
     }

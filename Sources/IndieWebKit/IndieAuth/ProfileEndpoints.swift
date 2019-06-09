@@ -7,9 +7,10 @@
 
 import Foundation
 
-public struct ProfileEndpoints {
+public struct ProfileEndpoints: Equatable {
     public var authorization_endpoint: URL?
     public var token_endpoint: URL?
     public var micropub_endpoint: URL?
     public var microsub_endpoint: URL?
+    public var webmention_endpoint: URL?
 }
