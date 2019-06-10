@@ -152,6 +152,10 @@ final class IndieAuthTests: XCTestCase {
         
     }
     
+    func testAuthenticationRequest() {
+        
+    }
+    
     // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used
     
     static var allTests = [

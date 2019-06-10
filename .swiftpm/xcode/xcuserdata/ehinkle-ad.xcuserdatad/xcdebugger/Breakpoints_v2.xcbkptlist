@@ -7,16 +7,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "4D956D6E-2D09-4E73-A53F-250C8A57AD60"
+            uuid = "137F4768-847C-4B94-9D4A-1B2D589A36F4"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Tests/IndieWebKitTests/IndieWebKitTests.swift"
+            filePath = "Sources/IndieWebKit/IndieAuth/ProfileDiscoveryRequest.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "11"
-            endingLineNumber = "11"
-            landmarkName = "verifyValidProfileUrls()"
+            startingLineNumber = "65"
+            endingLineNumber = "65"
+            landmarkName = "parseSiteData(response:body:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
