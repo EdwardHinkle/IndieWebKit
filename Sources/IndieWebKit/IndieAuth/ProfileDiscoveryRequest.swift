@@ -48,9 +48,15 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
             
             if htmlData != nil, let html = String(data: htmlData!, encoding: .utf8)   {
                 do {
-                    let _: Document = try SwiftSoup.parse(html)
+                    let profilePage: Document = try SwiftSoup.parse(html)
                     
-                    // TODO: Loop through EndpointTypes, then look for those that are still nil in the HTML
+                    EndpointType.allCases.filter { self.endpoints[$0] == nil }
+                                         .forEach { endpointType in
+                        
+                            if let endpoint = try? profilePage.select("link[rel=\"\(endpointType)\"]").first()?.attr("href") {
+                                self.endpoints[endpointType] = URL(string: endpoint)
+                            }
+                    }
                     
                     
                 } catch Exception.Error(_, let message) {

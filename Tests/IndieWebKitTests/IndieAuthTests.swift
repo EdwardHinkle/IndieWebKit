@@ -84,10 +84,13 @@ final class IndieAuthTests: XCTestCase {
         let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
         let discovery = ProfileDiscoveryRequest(for: profile)
         discovery.start {
-            XCTAssertEqual(discovery.endpoints, profileKnownEndpoints)
+            XCTAssertEqual(discovery.endpoints[EndpointType.authorization_endpoint], profileKnownEndpoints[EndpointType.authorization_endpoint])
+            XCTAssertEqual(discovery.endpoints[EndpointType.token_endpoint], profileKnownEndpoints[EndpointType.token_endpoint])
+            XCTAssertEqual(discovery.endpoints[EndpointType.micropub], profileKnownEndpoints[EndpointType.micropub])
+            XCTAssertEqual(discovery.endpoints[EndpointType.microsub], profileKnownEndpoints[EndpointType.microsub])
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5, handler: nil)
     }
     
