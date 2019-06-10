@@ -132,6 +132,26 @@ final class IndieAuthTests: XCTestCase {
         waitForExpectations(timeout: 5, handler: nil)
     }
     
+    func testProfileDiscoveryEndpointsRelative() {
+        
+        let profile = URL(string: "https://vanderven.se/martijn/")!
+        let profileKnownEndpoints = [EndpointType.authorization_endpoint: URL(string: "https://vanderven.se/martijn/auth/")!,
+                                     EndpointType.webmention: URL(string: "https://vanderven.se/martijn/mention.php")!]
+        
+//        let discovery = ProfileDiscoveryRequest(for: profile)
+//        discovery.parseSiteData(response: HTTPURLResponse(), htmlData: nil)
+        
+        let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
+        let discovery = ProfileDiscoveryRequest(for: profile)
+        discovery.start {
+            XCTAssertEqual(discovery.endpoints, profileKnownEndpoints)
+            expectation.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+    }
+    
     // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used
     
     static var allTests = [

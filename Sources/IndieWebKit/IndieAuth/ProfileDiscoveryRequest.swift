@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 import SwiftSoup
 
 /// Fetch a user's IndieAuth profile url and discovery endpoints for signing in based how how we want to sign in
@@ -23,54 +24,63 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
     }
     
     public func start(completion: @escaping (() -> ())) {
-        self.fetchSiteData { response, htmlData in
-            
-            if response.allHeaderFields["Link"] != nil {
-                let httpLinkHeadersString = response.allHeaderFields["Link"] as! String
-                let httpLinkHeaders = httpLinkHeadersString.split(separator: ",")
-                httpLinkHeaders.forEach { linkHeader in
-                    
-                    // The Link headers are somethign like this: <URL>; rel="<ENDPOINT_TYPE"
-                    if let endpoint = linkHeader.split(separator: ";") // We split on the semicolon so we can seperate the url
-                                            .first? // The url is before the semicolon
-                                            .replacingOccurrences(of: "( |<|>)", with: "", options: .regularExpression), // We want to remove any non-url characters
-                        let endpointUrl = URL(string: endpoint) {
-                        
-                        EndpointType.allCases.forEach { endpointType in
-                            // Only use value if it is the FIRST instance of a predefined endpointType
-                            if self.endpoints[endpointType] == nil && linkHeader.contains("rel=\"\(endpointType)\"") {
-                                self.endpoints[endpointType] = endpointUrl
-                            }
-                        }
-                    }
-                }
-            }
-            
-            if htmlData != nil, let html = String(data: htmlData!, encoding: .utf8)   {
-                do {
-                    let profilePage: Document = try SwiftSoup.parse(html)
-                    
-                    EndpointType.allCases.filter { self.endpoints[$0] == nil }
-                                         .forEach { endpointType in
-                        
-                            if let endpoint = try? profilePage.select("link[rel=\"\(endpointType)\"]").first()?.attr("href") {
-                                self.endpoints[endpointType] = URL(string: endpoint)
-                            }
-                    }
-                    
-                    
-                } catch Exception.Error(_, let message) {
-                    print(message)
-                } catch {
-                    print("error")
-                }
-            }
-            
+        // TODO: Is self being capture below causing a memory leak???
+        self.fetchSiteData { response, body in
+            self.parseSiteData(response: response, body: body)
             completion()
         }
     }
     
-    private func fetchSiteData(completion: @escaping ((HTTPURLResponse, Data?)) -> ()) {
+    func parseSiteData(response: HTTPURLResponse, body: String?) {
+        if response.allHeaderFields["Link"] != nil {
+            let httpLinkHeadersString = response.allHeaderFields["Link"] as! String
+            let httpLinkHeaders = httpLinkHeadersString.split(separator: ",")
+            httpLinkHeaders.forEach { linkHeader in
+                
+                // The Link headers are somethign like this: <URL>; rel="<ENDPOINT_TYPE"
+                if let endpoint = linkHeader.split(separator: ";") // We split on the semicolon so we can seperate the url
+                    .first? // The url is before the semicolon
+                    .replacingOccurrences(of: "( |<|>)", with: "", options: .regularExpression), // We want to remove any non-url characters
+                    let endpointUrl = URL(string: endpoint, relativeTo: self.profile) {
+                    
+                    EndpointType.allCases.forEach { endpointType in
+                        // Only use value if it is the FIRST instance of a predefined endpointType
+                        if self.endpoints[endpointType] == nil && linkHeader.contains("rel=\"\(endpointType)\"") {
+                            self.endpoints[endpointType] = endpointUrl
+                        }
+                    }
+                }
+            }
+        }
+        
+        // TODO: We should check that the response type is HTML not JSON
+        if body != nil {
+            do {
+                let profilePage: Document = try SwiftSoup.parse(body!)
+                
+                EndpointType.allCases.filter { self.endpoints[$0] == nil }
+                    .forEach { endpointType in
+                        
+                        if var endpoint = try? profilePage.select("link[rel=\"\(endpointType)\"]").first()?.attr("href") {
+                            if !endpoint.contains("http") {
+                                endpoint = "\(self.profile)\(endpoint)"
+                            }
+                            self.endpoints[endpointType] = URL(string: endpoint)
+                        }
+                }
+                
+                
+            } catch Exception.Error(_, let message) {
+                print(message)
+            } catch {
+                print("error")
+            }
+        }
+        
+        // TODO: Check if there should be any parsing of values from JSON response types
+    }
+    
+    private func fetchSiteData(completion: @escaping (HTTPURLResponse, String?) -> ()) {
         var request = URLRequest(url: self.profile)
         request.setValue(UAString(), forHTTPHeaderField: "User-Agent")
 
@@ -78,7 +88,7 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
         let config = URLSessionConfiguration.default
         let session = URLSession(configuration: config, delegate: self, delegateQueue: nil)
 
-        let task = session.dataTask(with: request) { (data, response, error) in
+        session.dataTask(with: request) { (data, response, error) in
             // check for any errors
             guard error == nil else {
                 print("error calling GET on \(self.profile)")
@@ -88,13 +98,15 @@ public class ProfileDiscoveryRequest: NSObject, URLSessionTaskDelegate {
 
             // Check if endpoint is in the HTTP Header fields
             if let httpResponse = response as? HTTPURLResponse {
-                completion((httpResponse, data))
+                var html: String? = nil
+                if data != nil {
+                    html = String(data: data!, encoding: .utf8)
+                }
+                
+                completion(httpResponse, html)
             }
 
-        }
-
-        task.resume()
-
+        }.resume()
     }
     
     public func urlSession(_ session: URLSession,
