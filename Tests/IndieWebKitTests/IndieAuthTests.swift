@@ -162,7 +162,8 @@ final class IndieAuthTests: XCTestCase {
         let redirect_uri = URL(string: "https://remark.social/ios/callback")!
         let state = String.randomAlphaNumericString(length: 25)
         
-        let request = AuthenticationRequest(for: profile,
+        let request = IndieAuthRequest(.Authentication,
+                              for: profile,
                               at: authorization_endpoint,
                               clientId: client_id,
                               redirectUri: redirect_uri,
@@ -181,12 +182,13 @@ final class IndieAuthTests: XCTestCase {
         let redirect_uri = URL(string: "https://remark.social/ios/callback")!
         let state = String.randomAlphaNumericString(length: 25)
         
-        let request = AuthenticationRequest(for: profile,
-                                            at: authorization_endpoint,
-                                            clientId: client_id,
-                                            redirectUri: redirect_uri,
-                                            state: state,
-                                            codeChallenge: nil)
+        let request = IndieAuthRequest(.Authentication,
+                                        for: profile,
+                                        at: authorization_endpoint,
+                                        clientId: client_id,
+                                        redirectUri: redirect_uri,
+                                        state: state,
+                                        codeChallenge: nil)
         
         let authorization_code_from_server = String.randomAlphaNumericString(length: 20)
         
@@ -204,12 +206,13 @@ final class IndieAuthTests: XCTestCase {
         let redirect_uri = URL(string: "https://remark.social/ios/callback")!
         let state = String.randomAlphaNumericString(length: 25)
         
-        let request = AuthenticationRequest(for: profile,
-                                            at: authorization_endpoint,
-                                            clientId: client_id,
-                                            redirectUri: redirect_uri,
-                                            state: state,
-                                            codeChallenge: nil)
+        let request = IndieAuthRequest(.Authentication,
+                                        for: profile,
+                                        at: authorization_endpoint,
+                                        clientId: client_id,
+                                        redirectUri: redirect_uri,
+                                        state: state,
+                                        codeChallenge: nil)
         
         let authorization_code = String.randomAlphaNumericString(length: 20)
         
@@ -236,12 +239,13 @@ final class IndieAuthTests: XCTestCase {
         let redirect_uri = URL(string: "https://remark.social/ios/callback")!
         let state = String.randomAlphaNumericString(length: 25)
         
-        let request = AuthenticationRequest(for: profile,
-                                            at: authorization_endpoint,
-                                            clientId: client_id,
-                                            redirectUri: redirect_uri,
-                                            state: state,
-                                            codeChallenge: nil)
+        let request = IndieAuthRequest(.Authentication,
+                                        for: profile,
+                                        at: authorization_endpoint,
+                                        clientId: client_id,
+                                        redirectUri: redirect_uri,
+                                        state: state,
+                                        codeChallenge: nil)
         
         let sameProfile = profile
         let responseWithSameProfile = [ "me": sameProfile ]

@@ -1,21 +1,22 @@
 //
-//  AuthenticationRequest.swift
+//  IndieAuthRequest.swift
 //  
 //
-//  Created by ehinkle-ad on 6/10/19.
+//  Created by ehinkle-ad on 6/11/19.
 //
 
 import Foundation
 import CryptoSwift
-//import AuthenticationServices
 
-public class AuthenticationRequest {
+public class IndieAuthRequest {
     
+    private var responseType: AccessType
     private var profile: URL
     private var authorizationEndpoint: URL
     private var clientId: URL
     private var redirectUri: URL
     private var state: String
+    private var scope: [String]
     private var codeChallenge: String?
     private let codeChallengeMethod = "S256"
     
@@ -27,7 +28,12 @@ public class AuthenticationRequest {
         queryItems.append(URLQueryItem(name: "client_id", value: clientId.absoluteString))
         queryItems.append(URLQueryItem(name: "redirect_uri", value: redirectUri.absoluteString))
         queryItems.append(URLQueryItem(name: "state", value: state))
-        queryItems.append(URLQueryItem(name: "response_type", value: "id"))
+        
+        if scope.count > 0 {
+            queryItems.append(URLQueryItem(name: "scope", value: scope.joined(separator: " ")))
+        }
+        
+        queryItems.append(URLQueryItem(name: "response_type", value: responseType.rawValue))
         
         if codeChallenge != nil {
             queryItems.append(URLQueryItem(name: "code_challenge_method", value: codeChallengeMethod))
@@ -39,17 +45,28 @@ public class AuthenticationRequest {
         return requestUrl?.url
     }
     
-    init(for profile: URL, at authorizationEndpoint: URL, clientId: URL, redirectUri: URL, state: String, codeChallenge: String?) {
-        self.profile = profile
-        self.authorizationEndpoint = authorizationEndpoint
-        self.clientId = clientId
-        self.redirectUri = redirectUri
-        self.state = state
-        self.codeChallenge = codeChallenge
+    
+    init(_ responseType: AccessType,
+         for profile: URL,
+         at authorizationEndpoint: URL,
+         clientId: URL,
+         redirectUri: URL,
+         state: String,
+         scope: [String] = [],
+         codeChallenge: String?) {
         
-        if self.codeChallenge == nil {
-            self.codeChallenge = generateDefaultCodeChallenge()
-        }
+            self.responseType = responseType
+            self.profile = profile
+            self.authorizationEndpoint = authorizationEndpoint
+            self.clientId = clientId
+            self.redirectUri = redirectUri
+            self.state = state
+            self.scope = scope
+            self.codeChallenge = codeChallenge
+        
+            if self.codeChallenge == nil {
+                self.codeChallenge = generateDefaultCodeChallenge()
+            }
     }
     
     @available(iOS 12.0, macOS 10.15, *)
@@ -59,31 +76,31 @@ public class AuthenticationRequest {
             return
         }
         
-//        ASWebAuthenticationSession(url: url!, callbackURLScheme: nil) { [weak self] responseUrl, error in
-//            guard error == nil else {
-//                // TODO: Throw some type of error
-//                return
-//            }
-//
-//            guard responseUrl != nil else {
-//                // TODO: Throw some type of error
-//                return
-//            }
-//
-//            let authorizationCode = self?.parseResponse(responseUrl!)
-//            guard authorizationCode != nil else {
-//                // TODO: Throw an error because authorization code should not be nil
-//                return
-//            }
-//
-//            self?.verifyAuthenticationCode(authorizationCode!) { [weak self] codeVerified in
-//                if (codeVerified) {
-//                    completion(self?.profile)
-//                } else {
-//                    completion(nil)
-//                }
-//            }
-//        }.start()
+        //        ASWebAuthenticationSession(url: url!, callbackURLScheme: nil) { [weak self] responseUrl, error in
+        //            guard error == nil else {
+        //                // TODO: Throw some type of error
+        //                return
+        //            }
+        //
+        //            guard responseUrl != nil else {
+        //                // TODO: Throw some type of error
+        //                return
+        //            }
+        //
+        //            let authorizationCode = self?.parseResponse(responseUrl!)
+        //            guard authorizationCode != nil else {
+        //                // TODO: Throw an error because authorization code should not be nil
+        //                return
+        //            }
+        //
+        //            self?.verifyAuthenticationCode(authorizationCode!) { [weak self] codeVerified in
+        //                if (codeVerified) {
+        //                    completion(self?.profile)
+        //                } else {
+        //                    completion(nil)
+        //                }
+        //            }
+        //        }.start()
     }
     
     func parseResponse(_ responseUrl: URL) -> String {
@@ -98,7 +115,7 @@ public class AuthenticationRequest {
                 state = queryItem.value!
             }
         }
-    
+        
         guard state == self.state else {
             // TODO: Throw some error because state doesn't match
             return ""
