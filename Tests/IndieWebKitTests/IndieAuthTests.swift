@@ -223,6 +223,7 @@ final class IndieAuthTests: XCTestCase {
         XCTAssertEqual(bodyDictionary["code"], authorization_code)
         XCTAssertEqual(bodyDictionary["client_id"], client_id.absoluteString)
         XCTAssertEqual(bodyDictionary["redirect_uri"], redirect_uri.absoluteString)
+        XCTAssertTrue(request.checkCodeChallenge(bodyDictionary["code_verifier"]!))
     }
     
     // IndieAuth Spec 5.4 Authorization Code Verification Response

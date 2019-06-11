@@ -143,11 +143,15 @@ public class AuthenticationRequest {
         request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         
-        let postBody = [
+        var postBody = [
             "code": code,
             "client_id": clientId.absoluteString,
             "redirect_uri": redirectUri.absoluteString
         ]
+        
+        if codeChallenge != nil {
+            postBody["code_verifier"] = codeChallenge
+        }
         
         try request.httpBody = JSONEncoder().encode(postBody)
         
@@ -173,5 +177,13 @@ public class AuthenticationRequest {
     
     private func generateDefaultCodeChallenge() -> String? {
         return Data(base64Encoded: String.randomString(length: 128).sha256())?.base64EncodedString()
+    }
+    
+    func checkCodeChallenge(_ testChallenge: String) -> Bool {
+        guard codeChallenge != nil else {
+            return false
+        }
+        
+        return codeChallenge! == testChallenge
     }
 }
