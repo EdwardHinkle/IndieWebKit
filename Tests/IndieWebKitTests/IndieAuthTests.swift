@@ -291,6 +291,28 @@ final class IndieAuthTests: XCTestCase {
         XCTAssertTrue(requestWithScope.url!.absoluteString.hasPrefix("\(authorization_endpoint)?me=\(profile)&client_id=\(client_id)&redirect_uri=\(redirect_uri)&state=\(state)&scope=create%20update%20delete&response_type=code&code_challenge_method=S256&code_challenge="))
     }
     
+    // IndieAuth Spec 6.2.2 Parsing the Authorization Response
+    // https://indieauth.spec.indieweb.org/#authorization-response
+    func testParseAuthorizationResponse() {
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let authorization_code_from_server = String.randomAlphaNumericString(length: 20)
+        
+        let parsed_authorization_code = request.parseResponse(URL(string: "\(redirect_uri)?code=\(authorization_code_from_server)&state=\(state)")!)
+        XCTAssertEqual(parsed_authorization_code, authorization_code_from_server)
+    }
+    
     // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used
     
     static var allTests = [
