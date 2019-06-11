@@ -313,6 +313,42 @@ final class IndieAuthTests: XCTestCase {
         XCTAssertEqual(parsed_authorization_code, authorization_code_from_server)
     }
     
+    // IndieAuth Spec 6.3.1 Generate Token Request
+    // https://indieauth.spec.indieweb.org/#token-request
+    func testTokenRequest() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       with: token_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let authorization_code = String.randomAlphaNumericString(length: 20)
+        
+        let tokenRequest: URLRequest = try! request.getTokenRequest(with: authorization_code)
+        
+        XCTAssertEqual(tokenRequest.httpMethod, "POST")
+        XCTAssertEqual(tokenRequest.url, token_endpoint)
+        
+        let bodyDictionary = try! JSONDecoder().decode([String:String].self, from: tokenRequest.httpBody!)
+        
+        XCTAssertEqual(bodyDictionary["grant_type"], "authorization_code")
+        XCTAssertEqual(bodyDictionary["code"], authorization_code)
+        XCTAssertEqual(bodyDictionary["client_id"], client_id.absoluteString)
+        XCTAssertEqual(bodyDictionary["redirect_uri"], redirect_uri.absoluteString)
+        XCTAssertEqual(bodyDictionary["me"], profile.absoluteString)
+        XCTAssertTrue(request.checkCodeChallenge(bodyDictionary["code_verifier"]!))
+    }
+    
     // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used
     
     static var allTests = [

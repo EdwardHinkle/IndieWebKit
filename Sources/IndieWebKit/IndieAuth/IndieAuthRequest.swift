@@ -7,12 +7,14 @@
 
 import Foundation
 import CryptoSwift
+//import AuthenticationServices
 
 public class IndieAuthRequest {
-    
+ 
     private var responseType: AccessType
     private var profile: URL
     private var authorizationEndpoint: URL
+    private var tokenEndpoint: URL?
     private var clientId: URL
     private var redirectUri: URL
     private var state: String
@@ -49,6 +51,7 @@ public class IndieAuthRequest {
     init(_ responseType: AccessType,
          for profile: URL,
          at authorizationEndpoint: URL,
+         with tokenEndpoint: URL? = nil,
          clientId: URL,
          redirectUri: URL,
          state: String,
@@ -58,6 +61,7 @@ public class IndieAuthRequest {
             self.responseType = responseType
             self.profile = profile
             self.authorizationEndpoint = authorizationEndpoint
+            self.tokenEndpoint = tokenEndpoint
             self.clientId = clientId
             self.redirectUri = redirectUri
             self.state = state
@@ -76,31 +80,46 @@ public class IndieAuthRequest {
             return
         }
         
-        //        ASWebAuthenticationSession(url: url!, callbackURLScheme: nil) { [weak self] responseUrl, error in
-        //            guard error == nil else {
-        //                // TODO: Throw some type of error
-        //                return
-        //            }
-        //
-        //            guard responseUrl != nil else {
-        //                // TODO: Throw some type of error
-        //                return
-        //            }
-        //
-        //            let authorizationCode = self?.parseResponse(responseUrl!)
-        //            guard authorizationCode != nil else {
-        //                // TODO: Throw an error because authorization code should not be nil
-        //                return
-        //            }
-        //
-        //            self?.verifyAuthenticationCode(authorizationCode!) { [weak self] codeVerified in
-        //                if (codeVerified) {
-        //                    completion(self?.profile)
-        //                } else {
-        //                    completion(nil)
-        //                }
-        //            }
-        //        }.start()
+//        ASWebAuthenticationSession(url: url!, callbackURLScheme: nil) { [weak self] responseUrl, error in
+//            guard error == nil else {
+//                // TODO: Throw some type of error
+//                return
+//            }
+//
+//            guard responseUrl != nil else {
+//                // TODO: Throw some type of error
+//                return
+//            }
+//
+//            let authorizationCode = self?.parseResponse(responseUrl!)
+//            guard authorizationCode != nil else {
+//                // TODO: Throw an error because authorization code should not be nil
+//                return
+//            }
+//
+//            switch (self?.responseType) {
+//            case .Authentication:
+//                self?.verifyAuthenticationCode(authorizationCode!) { [weak self] codeVerified in
+//                    if (codeVerified) {
+//                        completion(self?.profile)
+//                    } else {
+//                        completion(nil)
+//                    }
+//                }
+//            case .Authorization:
+//                self?.retrieveToken(authorizationCode!) { [weak self] token in
+//                    if (token != nil) {
+//                        completion(nil) // Need to figure out what to return
+//                    } else {
+//                        completion(nil)
+//                    }
+//                }
+//            case .none:
+//                // TODO: ERROR!
+//                print("ERROR!! No Response Type")
+//            }
+//
+//        }.start()
     }
     
     func parseResponse(_ responseUrl: URL) -> String {
@@ -154,6 +173,36 @@ public class IndieAuthRequest {
         }
     }
     
+    func retrieveToken(_ code: String, completion: @escaping ((String?) -> Void)) {
+        
+//        do {
+//            let verificationRequest = try getTokenRequest(with: code)
+//
+//            URLSession.shared.dataTask(with: verificationRequest) { [weak self] body, response, error in
+//                guard error == nil else {
+//                    // TODO: Throw error here
+//                    return
+//                }
+//
+//                // TODO: Check to make sure content type is application/json
+//
+//                guard body != nil else {
+//                    // TODO: throw error here
+//                    return
+//                }
+//
+//                let response = try! JSONDecoder().decode([String:URL].self, from: body!)
+//
+//                completion(self!.confirmVerificationResponse(response))
+//
+//                }.resume()
+//
+//        } catch {
+//            // TODO: Figure out how to report error
+//            completion(false)
+//        }
+    }
+    
     func getVerificationRequest(with code: String) throws -> URLRequest {
         var request = URLRequest(url: authorizationEndpoint)
         request.httpMethod = "POST"
@@ -164,6 +213,34 @@ public class IndieAuthRequest {
             "code": code,
             "client_id": clientId.absoluteString,
             "redirect_uri": redirectUri.absoluteString
+        ]
+        
+        if codeChallenge != nil {
+            postBody["code_verifier"] = codeChallenge
+        }
+        
+        try request.httpBody = JSONEncoder().encode(postBody)
+        
+        return request
+    }
+    
+    func getTokenRequest(with code: String) throws -> URLRequest {
+        guard tokenEndpoint != nil else {
+            // TODO: Throw error!
+            throw URLError(URLError.Code.badURL)
+        }
+        
+        var request = URLRequest(url: tokenEndpoint!)
+        request.httpMethod = "POST"
+        request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        var postBody = [
+            "grant_type": "authorization_code",
+            "code": code,
+            "client_id": clientId.absoluteString,
+            "redirect_uri": redirectUri.absoluteString,
+            "me": profile.absoluteString
         ]
         
         if codeChallenge != nil {
