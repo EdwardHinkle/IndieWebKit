@@ -167,10 +167,9 @@ final class IndieAuthTests: XCTestCase {
                               at: authorization_endpoint,
                               clientId: client_id,
                               redirectUri: redirect_uri,
-                              state: state,
-                              codeChallenge: nil)
+                              state: state)
      
-        XCTAssertTrue(request.url!.absoluteString.contains("\(authorization_endpoint)?me=\(profile)&client_id=\(client_id)&redirect_uri=\(redirect_uri)&state=\(state)&response_type=id&code_challenge_method=S256&code_challenge="))
+        XCTAssertTrue(request.url!.absoluteString.hasPrefix("\(authorization_endpoint)?me=\(profile)&client_id=\(client_id)&redirect_uri=\(redirect_uri)&state=\(state)&response_type=id&code_challenge_method=S256&code_challenge="))
     }
     
     // IndieAuth Spec 5.3 Parsing the Authentication Response
@@ -187,8 +186,7 @@ final class IndieAuthTests: XCTestCase {
                                         at: authorization_endpoint,
                                         clientId: client_id,
                                         redirectUri: redirect_uri,
-                                        state: state,
-                                        codeChallenge: nil)
+                                        state: state)
         
         let authorization_code_from_server = String.randomAlphaNumericString(length: 20)
         
@@ -211,8 +209,7 @@ final class IndieAuthTests: XCTestCase {
                                         at: authorization_endpoint,
                                         clientId: client_id,
                                         redirectUri: redirect_uri,
-                                        state: state,
-                                        codeChallenge: nil)
+                                        state: state)
         
         let authorization_code = String.randomAlphaNumericString(length: 20)
         
@@ -244,8 +241,7 @@ final class IndieAuthTests: XCTestCase {
                                         at: authorization_endpoint,
                                         clientId: client_id,
                                         redirectUri: redirect_uri,
-                                        state: state,
-                                        codeChallenge: nil)
+                                        state: state)
         
         let sameProfile = profile
         let responseWithSameProfile = [ "me": sameProfile ]
@@ -262,6 +258,37 @@ final class IndieAuthTests: XCTestCase {
         let responseWithSpoofedProfile = [ "me": spoofedProfile ]
         let isValidMe3 = request.confirmVerificationResponse(responseWithSpoofedProfile)
         XCTAssertFalse(isValidMe3)
+    }
+    
+    // IndieAuth Spec 6.2.1 Building Authorization Request URL
+    // https://indieauth.spec.indieweb.org/#authorization-request
+    func testAuthorizationRequestUrl() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        let scope = ["create", "update", "delete"]
+        
+        let requestWithoutScope = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        XCTAssertTrue(requestWithoutScope.url!.absoluteString.hasPrefix("\(authorization_endpoint)?me=\(profile)&client_id=\(client_id)&redirect_uri=\(redirect_uri)&state=\(state)&response_type=code&code_challenge_method=S256&code_challenge="))
+        
+        let requestWithScope = IndieAuthRequest(.Authorization,
+                                                   for: profile,
+                                                   at: authorization_endpoint,
+                                                   clientId: client_id,
+                                                   redirectUri: redirect_uri,
+                                                   state: state,
+                                                   scope: scope)
+        
+        XCTAssertTrue(requestWithScope.url!.absoluteString.hasPrefix("\(authorization_endpoint)?me=\(profile)&client_id=\(client_id)&redirect_uri=\(redirect_uri)&state=\(state)&scope=create%20update%20delete&response_type=code&code_challenge_method=S256&code_challenge="))
     }
     
     // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used

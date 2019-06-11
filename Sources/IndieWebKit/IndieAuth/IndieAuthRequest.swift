@@ -53,7 +53,7 @@ public class IndieAuthRequest {
          redirectUri: URL,
          state: String,
          scope: [String] = [],
-         codeChallenge: String?) {
+         codeChallenge: String? = nil) {
         
             self.responseType = responseType
             self.profile = profile
