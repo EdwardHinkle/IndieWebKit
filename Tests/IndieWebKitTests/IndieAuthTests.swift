@@ -152,8 +152,111 @@ final class IndieAuthTests: XCTestCase {
         
     }
     
-    func testAuthenticationRequest() {
+    // IndieAuth Spec 5.2 Building Authentication Request URL
+    // https://indieauth.spec.indieweb.org/#authentication-request
+    func testAuthenticationRequestUrl() {
         
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = AuthenticationRequest(for: profile,
+                              at: authorization_endpoint,
+                              clientId: client_id,
+                              redirectUri: redirect_uri,
+                              state: state,
+                              codeChallenge: nil)
+     
+        XCTAssertTrue(request.url!.absoluteString.contains("\(authorization_endpoint)?me=\(profile)&client_id=\(client_id)&redirect_uri=\(redirect_uri)&state=\(state)&response_type=id&code_challenge_method=S256&code_challenge="))
+    }
+    
+    // IndieAuth Spec 5.3 Parsing the Authentication Response
+    // https://indieauth.spec.indieweb.org/#authentication-response
+    func testParseAuthenticationResponse() {
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = AuthenticationRequest(for: profile,
+                                            at: authorization_endpoint,
+                                            clientId: client_id,
+                                            redirectUri: redirect_uri,
+                                            state: state,
+                                            codeChallenge: nil)
+        
+        let authorization_code_from_server = String.randomAlphaNumericString(length: 20)
+        
+        let parsed_authorization_code = request.parseResponse(URL(string: "\(redirect_uri)?code=\(authorization_code_from_server)&state=\(state)")!)
+        XCTAssertEqual(parsed_authorization_code, authorization_code_from_server)
+    }
+    
+    // IndieAuth Spec 5.4 Authorization Code Verification Request
+    // https://indieauth.spec.indieweb.org/#authorization-code-verification
+    func testAuthorizationCodeVerificationRequest() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = AuthenticationRequest(for: profile,
+                                            at: authorization_endpoint,
+                                            clientId: client_id,
+                                            redirectUri: redirect_uri,
+                                            state: state,
+                                            codeChallenge: nil)
+        
+        let authorization_code = String.randomAlphaNumericString(length: 20)
+        
+        let verificationRequest: URLRequest = try! request.getVerificationRequest(with: authorization_code)
+        
+        XCTAssertEqual(verificationRequest.httpMethod, "POST")
+        XCTAssertEqual(verificationRequest.url, authorization_endpoint)
+        
+        let bodyDictionary = try! JSONDecoder().decode([String:String].self, from: verificationRequest.httpBody!)
+        
+        XCTAssertEqual(bodyDictionary["code"], authorization_code)
+        XCTAssertEqual(bodyDictionary["client_id"], client_id.absoluteString)
+        XCTAssertEqual(bodyDictionary["redirect_uri"], redirect_uri.absoluteString)
+    }
+    
+    // IndieAuth Spec 5.4 Authorization Code Verification Response
+    // https://indieauth.spec.indieweb.org/#authorization-code-verification
+    func testAuthorizationCodeVerificationResponse() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = AuthenticationRequest(for: profile,
+                                            at: authorization_endpoint,
+                                            clientId: client_id,
+                                            redirectUri: redirect_uri,
+                                            state: state,
+                                            codeChallenge: nil)
+        
+        let sameProfile = profile
+        let responseWithSameProfile = [ "me": sameProfile ]
+        let isValidMe = request.confirmVerificationResponse(responseWithSameProfile)
+        XCTAssertTrue(isValidMe)
+        
+        var subProfile = URLComponents(url: profile, resolvingAgainstBaseURL: false)!
+        subProfile.path = "/path/under"
+        let responseWithSubProfile = [ "me": subProfile.url! ]
+        let isValidMe2 = request.confirmVerificationResponse(responseWithSubProfile)
+        XCTAssertTrue(isValidMe2)
+        
+        let spoofedProfile = URL(string: "https://spoofing.com")!
+        let responseWithSpoofedProfile = [ "me": spoofedProfile ]
+        let isValidMe3 = request.confirmVerificationResponse(responseWithSpoofedProfile)
+        XCTAssertFalse(isValidMe3)
     }
     
     // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used
