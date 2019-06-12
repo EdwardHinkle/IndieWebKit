@@ -12,13 +12,13 @@ import CryptoSwift
 public class IndieAuthRequest {
  
     private var responseType: AccessType
-    private var profile: URL
+    private(set) internal var profile: URL
     private var authorizationEndpoint: URL
     private var tokenEndpoint: URL?
     private var clientId: URL
     private var redirectUri: URL
     private var state: String
-    private var scope: [String]
+    private(set) internal var scope: [String]
     private var codeChallenge: String?
     private let codeChallengeMethod = "S256"
     
@@ -267,6 +267,50 @@ public class IndieAuthRequest {
         }
         
         return validProfile
+    }
+    
+    func parseTokenResponse(_ response: Data) throws -> (String, String) {
+        
+        let responseDictionary = try! JSONDecoder().decode([String:String].self, from: response)
+        
+        guard responseDictionary["access_token"] != nil else {
+            // TODO: throw error
+            throw IndieAuthError.authorizationError("Missing access_token in Response")
+        }
+        
+        guard responseDictionary["token_type"] != nil else {
+            // TODO: throw error
+            throw IndieAuthError.authorizationError("Missing token_type in Response")
+        }
+        
+        guard responseDictionary["scope"] != nil else {
+            // TODO: throw error
+            throw IndieAuthError.authorizationError("Missing scope in Response")
+        }
+        
+        guard responseDictionary["me"] != nil else {
+            // TODO: throw error
+            throw IndieAuthError.authorizationError("Missing me in Response")
+        }
+        
+        guard let meUrl = URL(string: responseDictionary["me"]!) else {
+            throw IndieAuthError.authorizationError("me isn't a value url")
+        }
+        
+        guard meUrl.host == profile.host else {
+            throw IndieAuthError.authorizationError("me is a different domain than original")
+        }
+        
+        scope = responseDictionary["scope"]!.components(separatedBy: " ")
+        
+        guard scope.count > 0 else {
+            throw IndieAuthError.authorizationError("no scopes returned")
+        }
+        
+        // TODO: We need to make sure the profile breaks for spoofing
+        profile = meUrl
+
+        return (responseDictionary["token_type"]!, responseDictionary["access_token"]!)
     }
     
     private func generateDefaultCodeChallenge() -> String? {

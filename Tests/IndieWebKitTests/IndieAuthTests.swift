@@ -349,6 +349,136 @@ final class IndieAuthTests: XCTestCase {
         XCTAssertTrue(request.checkCodeChallenge(bodyDictionary["code_verifier"]!))
     }
     
+    // IndieAuth Spec 6.3.3 Access Token Response
+    // https://indieauth.spec.indieweb.org/#access-token-response
+    func testTokenResponse() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       with: token_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let access_token_from_server = String.randomAlphaNumericString(length: 25)
+        let token_type = "Bearer"
+        let scope_from_server = "create update delete"
+        let me_profile = profile
+        
+        let responseFromServer: [String:String] = [
+            "access_token": access_token_from_server,
+            "token_type": token_type,
+            "scope": scope_from_server,
+            "me": me_profile.absoluteString
+        ]
+        
+        let returnData = try! JSONEncoder().encode(responseFromServer)
+        let (tokenType, accessToken) = try! request.parseTokenResponse(returnData)
+        
+        XCTAssertEqual(request.scope.joined(separator: " "), responseFromServer["scope"])
+        XCTAssertEqual(request.profile.absoluteString, responseFromServer["me"])
+        XCTAssertEqual(tokenType, token_type)
+        XCTAssertEqual(accessToken, access_token_from_server)
+    }
+    
+    // IndieAuth Spec 6.3.3 Access Token Response
+    // https://indieauth.spec.indieweb.org/#access-token-response
+    func testTokenResponseWithSubProfile() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       with: token_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let access_token_from_server = String.randomAlphaNumericString(length: 25)
+        let token_type = "Bearer"
+        let scope_from_server = "create update delete"
+        let me_profile = URL(string: "https://eddiehinkle.com/sub/profile")!
+        
+        let responseFromServer: [String:String] = [
+            "access_token": access_token_from_server,
+            "token_type": token_type,
+            "scope": scope_from_server,
+            "me": me_profile.absoluteString
+        ]
+        
+        let returnData = try! JSONEncoder().encode(responseFromServer)
+        let (tokenType, accessToken) = try! request.parseTokenResponse(returnData)
+        
+        XCTAssertEqual(request.scope.joined(separator: " "), responseFromServer["scope"])
+        XCTAssertEqual(request.profile.absoluteString, responseFromServer["me"])
+        XCTAssertEqual(tokenType, token_type)
+        XCTAssertEqual(accessToken, access_token_from_server)
+    }
+    
+    // IndieAuth Spec 6.3.3 Access Token Response
+    // https://indieauth.spec.indieweb.org/#access-token-response
+    func testTokenResponseWithInvalidProfile() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       with: token_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let access_token_from_server = String.randomAlphaNumericString(length: 25)
+        let token_type = "Bearer"
+        let scope_from_server = "create update delete"
+        let me_profile = URL(string: "https://spoofing.com/profile")!
+        
+        let responseFromServer: [String:String] = [
+            "access_token": access_token_from_server,
+            "token_type": token_type,
+            "scope": scope_from_server,
+            "me": me_profile.absoluteString
+        ]
+
+        let returnData = try! JSONEncoder().encode(responseFromServer)
+        var tokenType: String?, accessToken: String?
+        
+        do {
+            (tokenType, accessToken) = try request.parseTokenResponse(returnData)
+        } catch(IndieAuthError.authorizationError(let errorString)) {
+            XCTAssertNotNil(errorString)
+        } catch {
+            // The error that should be caught should be above.
+            // If we reach here, the logic has broken
+            XCTAssertTrue(false)
+        }
+        
+        XCTAssertEqual(request.scope.joined(separator: " "), "")
+        XCTAssertEqual(request.profile.absoluteString, profile.absoluteString)
+        XCTAssertNil(tokenType)
+        XCTAssertNil(accessToken)
+    }
+    
     // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used
     
     static var allTests = [
