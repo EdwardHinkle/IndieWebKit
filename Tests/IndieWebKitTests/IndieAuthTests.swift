@@ -479,6 +479,29 @@ final class IndieAuthTests: XCTestCase {
         XCTAssertNil(accessToken)
     }
     
+    // IndieAuth Spec 6.3.5 Request Token Revocation
+    // https://indieauth.spec.indieweb.org/#token-revocation
+    func testTokenRevocationRequest() {
+//        let profile = URL(string: "https://eddiehinkle.com")!
+//        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+//        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+//        let client_id = URL(string: "https://remark.social")!
+//        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+//        let state = String.randomAlphaNumericString(length: 25)
+//
+//        let request = IndieAuthRequest(.Authorization,
+//                                       for: profile,
+//                                       at: authorization_endpoint,
+//                                       with: token_endpoint,
+//                                       clientId: client_id,
+//                                       redirectUri: redirect_uri,
+//                                       state: state)
+//
+//        let access_token_from_server = String.randomAlphaNumericString(length: 25)
+//
+//        request.
+    }
+    
     // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used
     
     static var allTests = [

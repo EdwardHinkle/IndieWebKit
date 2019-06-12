@@ -8,7 +8,7 @@ final class MicropubTests: XCTestCase {
     
     // Micropub.rocks 100 - Create an h-entry post (form-encoded)
     func testCreateFormEncodedHEntryPost() {
-        
+        XCTAssertTrue(false)
     }
     
     static var allTests = [
