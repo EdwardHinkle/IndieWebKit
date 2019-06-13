@@ -16,17 +16,41 @@ public class MicropubSession {
          with accessToken: String) {
         
         self.micropubEndpoint = micropubEndpoint
+        self.accessToken = accessToken
     }
     
-    func start(completion: @escaping ((URL?) -> ())) {
-        guard url != nil else {
-            // TODO: Throw some type of error
-            return
+    func getConfigQuery() throws {
+        let request = try getConfigurationRequest()
+        URLSession.shared.dataTask(with: request) { body, response, error in
+            
+            
+            
         }
-    
     }
     
+//    func start(completion: @escaping (() -> Void)) {
+//        guard url != nil else {
+//            // TODO: Throw some type of error
+//            return
+//        }
+//
+//    }
     
+    func getConfigurationRequest() throws -> URLRequest {
+        guard var configRequestUrl = URLComponents(url: micropubEndpoint, resolvingAgainstBaseURL: false) else {
+            throw MicropubError.generalError("Config Query Url Malformed")
+        }
+        
+        configRequestUrl.queryItems = [
+            URLQueryItem(name: "q", value: "config")
+        ]
+        
+        var request = URLRequest(url: configRequestUrl.url!)
+        request.httpMethod = "GET"
+        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        return request
+    }
    
 //    func getVerificationRequest(with code: String) throws -> URLRequest {
 //        var request = URLRequest(url: authorizationEndpoint)
