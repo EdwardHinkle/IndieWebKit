@@ -9,6 +9,6 @@ import Foundation
 public struct SyndicationTarget: Codable {
     let uid: String
     let name: String
-    let service: SyndicationTargetCard
-    let user: SyndicationTargetCard
+    let service: SyndicationTargetCard?
+    let user: SyndicationTargetCard?
 }

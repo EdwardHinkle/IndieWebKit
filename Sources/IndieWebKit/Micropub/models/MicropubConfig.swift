@@ -16,9 +16,9 @@ public struct MicropubConfig: Codable {
     let q: [MicropubQueryType]? // This supports the Supported Queries extension. See https://github.com/indieweb/micropub-extensions/issues/7
     
     enum CodingKeys: String, CodingKey {
-        case mediaEndpoint = "media_endpoint"
-        case syndicateTo = "syndicate_to"
-        case postTypes = "post_types"
+        case mediaEndpoint = "media-endpoint"
+        case syndicateTo = "syndicate-to"
+        case postTypes = "post-types"
         case q
     }
 }

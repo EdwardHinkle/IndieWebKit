@@ -30,6 +30,7 @@ public class MicropubSession {
                 print("Error Catching Config Request \(error)")
                 completion(nil)
             } catch {
+                print("Uncaught error")
                 completion(nil)
             }
         }.resume()
@@ -44,7 +45,12 @@ public class MicropubSession {
             throw MicropubError.generalError(error!.localizedDescription)
         }
 
-        return try JSONDecoder().decode(MicropubConfig.self, from: body!)
+        do {
+            let config = try JSONDecoder().decode(MicropubConfig.self, from: body!)
+            return config
+        } catch DecodingError.keyNotFound(let missingKey, _) {
+            throw MicropubError.generalError("Micropub Config missing \(missingKey.stringValue) key")
+        }
     }
     
 //    func start(completion: @escaping (() -> Void)) {
