@@ -14,11 +14,13 @@ public struct MicropubConfig: Codable {
     let syndicateTo: [SyndicationTarget]?
     let postTypes: [SupportedPostType]? // This supports the Supported Vocabulary extension. See https://github.com/indieweb/micropub-extensions/issues/1
     let q: [MicropubQueryType]? // This supports the Supported Queries extension. See https://github.com/indieweb/micropub-extensions/issues/7
+    let destination: [MicropubDestination]? // This support the destinations extension
     
     enum CodingKeys: String, CodingKey {
         case mediaEndpoint = "media-endpoint"
         case syndicateTo = "syndicate-to"
         case postTypes = "post-types"
         case q
+        case destination
     }
 }
