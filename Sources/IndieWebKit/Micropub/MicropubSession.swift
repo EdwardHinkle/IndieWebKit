@@ -50,16 +50,10 @@ public class MicropubSession {
             return config
         } catch DecodingError.keyNotFound(let missingKey, _) {
             throw MicropubError.generalError("Micropub Config missing \(missingKey.stringValue) key")
+        } catch {
+            throw MicropubError.generalError("There was an error trying to decode the server response")
         }
     }
-    
-//    func start(completion: @escaping (() -> Void)) {
-//        guard url != nil else {
-//            // TODO: Throw some type of error
-//            return
-//        }
-//
-//    }
     
     func getConfigurationRequest() throws -> URLRequest {
         guard var configRequestUrl = URLComponents(url: micropubEndpoint, resolvingAgainstBaseURL: false) else {
@@ -68,6 +62,58 @@ public class MicropubSession {
         
         configRequestUrl.queryItems = [
             URLQueryItem(name: "q", value: "config")
+        ]
+        
+        var request = URLRequest(url: configRequestUrl.url!)
+        request.httpMethod = "GET"
+        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        return request
+    }
+    
+    func getSyndicationTargetQuery(completion: @escaping (([SyndicationTarget]?) -> ())) throws {
+        let request = try getSyndicationTargetRequest()
+        
+        URLSession.shared.dataTask(with: request) { [weak self] body, response, error in
+            do {
+                let syndicationTargets = try self?.parseSyndicationTargetResponse(body: body, response: response, error: error)
+                completion(syndicationTargets)
+            } catch MicropubError.generalError(let error) {
+                print("Error Catching Syndication Target Request \(error)")
+                completion(nil)
+            } catch {
+                print("Uncaught error")
+                completion(nil)
+            }
+            }.resume()
+    }
+    
+    func parseSyndicationTargetResponse(body: Data?, response: URLResponse?, error: Error?) throws -> [SyndicationTarget] {
+        guard body != nil else {
+            throw MicropubError.generalError("Micropub Syndication Target Request didn't return anything")
+        }
+        
+        guard error == nil else {
+            throw MicropubError.generalError(error!.localizedDescription)
+        }
+        
+        do {
+            let config = try JSONDecoder().decode(MicropubConfig.self, from: body!)
+            return config.syndicateTo ?? []
+        } catch DecodingError.keyNotFound(let missingKey, _) {
+            throw MicropubError.generalError("Micropub Config missing \(missingKey.stringValue) key")
+        } catch {
+            throw MicropubError.generalError("There was an error trying to decode the server response")
+        }
+    }
+    
+    func getSyndicationTargetRequest() throws -> URLRequest {
+        guard var configRequestUrl = URLComponents(url: micropubEndpoint, resolvingAgainstBaseURL: false) else {
+            throw MicropubError.generalError("Config Query Url Malformed")
+        }
+        
+        configRequestUrl.queryItems = [
+            URLQueryItem(name: "q", value: MicropubQueryType.syndicateTo.rawValue)
         ]
         
         var request = URLRequest(url: configRequestUrl.url!)

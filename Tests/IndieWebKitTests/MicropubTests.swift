@@ -4,7 +4,7 @@ import XCTest
 final class MicropubTests: XCTestCase {
     
     let micropubEndpoint = URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/micropub")!
-    let accessToken = "80ntMvtkk7LfoJGUJraX5bUrNjbJn1AXKZLaW9zebcSrAyyPKcGjNpY3DfL0q2XoaKNhpTtoUzEQoYiaSaJSCZS0V0OFHhVQF1VJo6ngzd2mK2MwKLahsdkqGDIwN9xr"
+    let accessToken = "BGp5NuExxhtVYiukM0NlC4mr3mczuMt8vxvNlUMkmaUMqKXdh6pUpmOZGd5dniVr257CyS4WKP4jgssd7JPx4CHln260pw0jQpL11bworiQ0E19b7xNnWMtCJX265XTq"
     
     // Micropub.rocks 100 - Create an h-entry post (form-encoded)
     func testCreateFormEncodedHEntryPost() {
@@ -26,6 +26,24 @@ final class MicropubTests: XCTestCase {
             XCTAssertEqual(config!.syndicateTo?.count, 1)
             XCTAssertEqual(config!.syndicateTo?[0].uid, "https://news.indieweb.org/en")
             XCTAssertEqual(config!.syndicateTo?[0].name, "IndieNews")
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // Micropub spec 3.7.3 Syndication Targets Query
+    // https://micropub.net/draft/#configuration
+    // Micropub.rocks test 601
+    func testMicropubSyndicationTargetQueryMicropubRocks() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        
+        let waiting = expectation(description: "Retrieve Micropub Syndication Targets")
+        try! micropub.getSyndicationTargetQuery { syndicationTargets in
+            XCTAssertNotNil(syndicationTargets)
+            XCTAssertEqual(syndicationTargets?.count, 1)
+            XCTAssertEqual(syndicationTargets?[0].uid, "https://news.indieweb.org/en")
+            XCTAssertEqual(syndicationTargets?[0].name, "IndieNews")
             waiting.fulfill()
         }
         
