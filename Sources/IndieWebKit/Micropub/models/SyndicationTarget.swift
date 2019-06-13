@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public struct SyndicationTarget {
+public struct SyndicationTarget: Codable {
     let uid: String
     let name: String
     let service: SyndicationTargetCard

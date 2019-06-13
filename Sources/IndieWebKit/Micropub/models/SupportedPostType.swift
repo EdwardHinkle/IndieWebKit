@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public struct SupportedPostType {
+public struct SupportedPostType: Codable {
     let type: PostType
     let name: String
 }

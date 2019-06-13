@@ -9,7 +9,7 @@ import Foundation
 
 // This defines the types of Micropub queries that this framework knows about..
 // For more information, see: https://indieweb.org/Micropub-extensions
-public enum MicropubQueryType: String {
+public enum MicropubQueryType: String, Codable {
     case source
     case syndicateTo = "syndicate-to"
     case category

@@ -19,13 +19,32 @@ public class MicropubSession {
         self.accessToken = accessToken
     }
     
-    func getConfigQuery() throws {
+    func getConfigQuery(completion: @escaping ((MicropubConfig?) -> ())) throws {
         let request = try getConfigurationRequest()
-        URLSession.shared.dataTask(with: request) { body, response, error in
-            
-            
-            
+        
+        URLSession.shared.dataTask(with: request) { [weak self] body, response, error in
+            do {
+                let config = try self?.parseConfigResponse(body: body, response: response, error: error)
+                completion(config)
+            } catch MicropubError.generalError(let error) {
+                print("Error Catching Config Request \(error)")
+                completion(nil)
+            } catch {
+                completion(nil)
+            }
+        }.resume()
+    }
+    
+    func parseConfigResponse(body: Data?, response: URLResponse?, error: Error?) throws -> MicropubConfig {
+        guard body != nil else {
+            throw MicropubError.generalError("Micropub Config Request didn't return anything")
         }
+        
+        guard error == nil else {
+            throw MicropubError.generalError(error!.localizedDescription)
+        }
+
+        return try JSONDecoder().decode(MicropubConfig.self, from: body!)
     }
     
 //    func start(completion: @escaping (() -> Void)) {
