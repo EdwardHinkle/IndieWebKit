@@ -9,7 +9,7 @@ import Foundation
 
 // This is the value returned from the Micropub configuration query endpoint.
 // See https://micropub.net/draft/#configuration for more information
-public struct MicropubConfig: Codable {
+public struct MicropubConfig {
     let mediaEndpoint: URL?
     let syndicateTo: [SyndicationTarget]?
     let postTypes: [PostType]? // This supports the Supported Vocabulary extension. See https://github.com/indieweb/micropub-extensions/issues/1
