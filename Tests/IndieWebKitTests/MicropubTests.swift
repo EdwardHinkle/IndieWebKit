@@ -83,6 +83,40 @@ final class MicropubTests: XCTestCase {
 //        waitForExpectations(timeout: 5, handler: nil)
 //    }
     
+    // Micropub spec 3.5 Delete Posts
+    // https://micropub.net/draft/#delete
+    // Micropub.rocks test 500
+    func testMicropubDelete() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(url: URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/500/pcEn5Mps")!)
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .FormEncoded, with: .delete) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertEqual(postUrl, post.url)
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // Micropub spec 3.5 Undelete Posts
+    // https://micropub.net/draft/#delete
+    // Micropub.rocks test 502
+    func testMicropubUndelete() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(url: URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/502/tNvJstBE")!)
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .FormEncoded, with: .undelete) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertEqual(postUrl, post.url)
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
     static var allTests = [
         ("Create form encoded h-entry post", testCreateFormEncodedHEntryPost),
         ("Test Micropub Config", testMicropubConfigMicropubRocks)

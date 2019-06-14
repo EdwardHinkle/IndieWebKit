@@ -22,16 +22,20 @@ public class MicropubSession {
     func sendMicropubPost(_ post: MicropubPost, as contentType: MicropubSendType, with action: MicropubActionType? = nil, completion: @escaping ((URL?) -> ())) throws {
         let request = try getMicropubRequest(for: post, as: contentType, with: action)
 
-        URLSession.shared.dataTask(with: request) { [weak self] _, response, error in
+        URLSession.shared.dataTask(with: request) { [weak self] body, response, error in
             do {
-                let postUrl = try self?.parseMicropubResponse(response as? HTTPURLResponse, error: error, with: action)
+                let postUrl = try self?.parseMicropubResponse(body: body, response: response as? HTTPURLResponse, error: error, with: action)
                 // On success we always want to return a url
                 // Some actions don't return a url, but if no error is thrown, it was successful
                 // So if the url is nil, we use the original post url to indicate success
                 // I might need to change this model going forward
+                print("We returned without error?")
                 completion(postUrl ?? post.url)
             } catch MicropubError.generalError(let error) {
                 print("Error Catching Micropub Request \(error)")
+                completion(nil)
+            } catch MicropubError.serverError(let error) {
+                print("MICROPUB SERVER ERROR: \(error)")
                 completion(nil)
             } catch {
                 print("Uncaught error")
@@ -67,12 +71,31 @@ public class MicropubSession {
             postBody["h"] = "test"
         }
         
-        try request.httpBody = JSONEncoder().encode(postBody)
+        switch contentType {
+        case .FormEncoded:
+            let postBodyString = postBody.map { property, value in
+                if let encodedProperty = property.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
+                   let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
+                    return "\(encodedProperty)=\(encodedValue)"
+                } else {
+                    return ""
+                }
+            }.joined(separator: "&")
+            print("testing form body")
+            print(postBodyString)
+            request.httpBody = postBodyString.data(using: .utf8, allowLossyConversion: false)
+        case .Multipart:
+            // TODO: Need to build a multipart data function
+            request.httpBody = Data()
+        case .JSON:
+            try request.httpBody = JSONEncoder().encode(postBody)
+        }
+        
         
         return request
     }
     
-    func parseMicropubResponse(_ response: HTTPURLResponse?, error: Error?, with action: MicropubActionType?) throws -> URL? {
+    func parseMicropubResponse(body: Data?, response: HTTPURLResponse?, error: Error?, with action: MicropubActionType?) throws -> URL? {
         guard error == nil else {
             throw MicropubError.generalError(error!.localizedDescription)
         }
@@ -81,9 +104,14 @@ public class MicropubSession {
             throw MicropubError.generalError("URL Response is nil")
         }
         
-        guard response!.statusCode != 200 && response!.statusCode != 202 else {
+        print("Status returned \(response!.statusCode)")
+        
+        guard response!.statusCode == 200 || response!.statusCode == 201 || response!.statusCode == 202 || response!.statusCode == 204 else {
             // TODO: is there a way to get the server's error here?
-            throw MicropubError.serverError("Server did not return a success message")
+            if body != nil {
+                throw MicropubError.serverError(statusCode: response!.statusCode, description: String(data: body!, encoding: .utf8) ?? "No body")
+            }
+            throw MicropubError.serverError(statusCode: response!.statusCode, description: "Server returned a response that was not 200")
         }
         
         if action == nil, let postUrlString = response!.allHeaderFields["Location"] as? String {

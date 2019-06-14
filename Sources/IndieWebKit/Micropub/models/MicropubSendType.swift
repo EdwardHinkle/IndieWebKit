@@ -7,7 +7,7 @@
 
 import Foundation
 public enum MicropubSendType: String {
-    case FormEncoded = "x-www-form-urlencoded"
+    case FormEncoded = "application/x-www-form-urlencoded"
     case Multipart = "multipart/form-data"
     case JSON = "application/json"
 }

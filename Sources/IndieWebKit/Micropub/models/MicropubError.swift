@@ -8,5 +8,5 @@
 import Foundation
 enum MicropubError: Error {
     case generalError(String)
-    case serverError(String)
+    case serverError(statusCode: Int, description: String)
 }
