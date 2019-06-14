@@ -19,6 +19,81 @@ public class MicropubSession {
         self.accessToken = accessToken
     }
     
+    func sendMicropubPost(_ post: MicropubPost, as contentType: MicropubSendType, with action: MicropubActionType? = nil, completion: @escaping ((URL?) -> ())) throws {
+        let request = try getMicropubRequest(for: post, as: contentType, with: action)
+
+        URLSession.shared.dataTask(with: request) { [weak self] _, response, error in
+            do {
+                let postUrl = try self?.parseMicropubResponse(response as? HTTPURLResponse, error: error, with: action)
+                // On success we always want to return a url
+                // Some actions don't return a url, but if no error is thrown, it was successful
+                // So if the url is nil, we use the original post url to indicate success
+                // I might need to change this model going forward
+                completion(postUrl ?? post.url)
+            } catch MicropubError.generalError(let error) {
+                print("Error Catching Micropub Request \(error)")
+                completion(nil)
+            } catch {
+                print("Uncaught error")
+                completion(nil)
+            }
+        }.resume()
+    }
+    
+    func getMicropubRequest(for post: MicropubPost, as contentType: MicropubSendType, with action: MicropubActionType? = nil) throws -> URLRequest {
+        var request = URLRequest(url: micropubEndpoint)
+        request.httpMethod = "POST"
+        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.addValue(contentType.rawValue, forHTTPHeaderField: "Content-Type")
+        request.addValue("IndieWebKit", forHTTPHeaderField: "X-Powered-By")
+        
+        var postBody: [String:String] = [:]
+        switch action {
+        case .some(let activeAction):
+            postBody["action"] = activeAction.rawValue
+            
+            guard post.url != nil else {
+                throw MicropubError.generalError("Trying to send Micropub request \(activeAction.rawValue) without a url property")
+            }
+            
+            switch activeAction {
+            case .delete:
+                postBody["url"] = post.url!.absoluteString
+            case .undelete:
+                postBody["url"] = post.url!.absoluteString
+            }
+        default:
+            // TODO: Regular Micropub post
+            postBody["h"] = "test"
+        }
+        
+        try request.httpBody = JSONEncoder().encode(postBody)
+        
+        return request
+    }
+    
+    func parseMicropubResponse(_ response: HTTPURLResponse?, error: Error?, with action: MicropubActionType?) throws -> URL? {
+        guard error == nil else {
+            throw MicropubError.generalError(error!.localizedDescription)
+        }
+
+        guard response != nil else {
+            throw MicropubError.generalError("URL Response is nil")
+        }
+        
+        guard response!.statusCode != 200 && response!.statusCode != 202 else {
+            // TODO: is there a way to get the server's error here?
+            throw MicropubError.serverError("Server did not return a success message")
+        }
+        
+        if action == nil, let postUrlString = response!.allHeaderFields["Location"] as? String {
+            return URL(string: postUrlString)
+        }
+        
+        return nil
+    }
+    
+    // MARK: Configuration Query
     func getConfigQuery(completion: @escaping ((MicropubConfig?) -> ())) throws {
         let request = try getConfigurationRequest()
         
@@ -71,6 +146,7 @@ public class MicropubSession {
         return request
     }
     
+    // MARK: Syndication Target Query
     func getSyndicationTargetQuery(completion: @escaping (([SyndicationTarget]?) -> ())) throws {
         let request = try getSyndicationTargetRequest()
         
