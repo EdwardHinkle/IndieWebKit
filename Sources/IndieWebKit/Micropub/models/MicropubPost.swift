@@ -7,6 +7,8 @@
 
 import Foundation
 public struct MicropubPost {
+    var type: MicropubPostType?
     var url: URL?
-    
+    var content: String?
+    var categories: [String]?
 }

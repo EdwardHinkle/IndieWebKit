@@ -51,10 +51,10 @@ public class MicropubSession {
         request.addValue(contentType.rawValue, forHTTPHeaderField: "Content-Type")
         request.addValue("IndieWebKit", forHTTPHeaderField: "X-Powered-By")
         
-        var postBody: [String:String] = [:]
+        var postBody: [String:[String]] = [:]
         switch action {
         case .some(let activeAction):
-            postBody["action"] = activeAction.rawValue
+            postBody["action"] = [activeAction.rawValue]
             
             guard post.url != nil else {
                 throw MicropubError.generalError("Trying to send Micropub request \(activeAction.rawValue) without a url property")
@@ -62,21 +62,42 @@ public class MicropubSession {
             
             switch activeAction {
             case .delete:
-                postBody["url"] = post.url!.absoluteString
+                postBody["url"] = [post.url!.absoluteString]
             case .undelete:
-                postBody["url"] = post.url!.absoluteString
+                postBody["url"] = [post.url!.absoluteString]
             }
         default:
-            // TODO: Regular Micropub post
-            postBody["h"] = "test"
+            if post.type != nil {
+                postBody["type"] = [post.type!.rawValue]
+            }
+            if post.content != nil {
+                postBody["content"] = [post.content!]
+            }
+            if post.url != nil {
+                postBody["url"] = [post.url!.absoluteString]
+            }
+            if post.categories != nil {
+                postBody["category"] = post.categories!
+            }
         }
         
         switch contentType {
         case .FormEncoded:
-            let postBodyString = postBody.map { property, value in
-                if let encodedProperty = property.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-                   let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
-                    return "\(encodedProperty)=\(encodedValue)"
+            let postBodyString = postBody.map { property, values in
+                if let encodedProperty = property.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
+                    if encodedProperty == "type", values.count > 0 {
+                        return "h=\(values[0].addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"
+                    }
+                    
+                    return values.map { value in
+                        if let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
+                            if values.count == 1 {
+                                return "\(encodedProperty)=\(encodedValue)"
+                            }
+                            return "\(encodedProperty)[]=\(encodedValue)"
+                        }
+                        return ""
+                    }.joined(separator: "&")
                 } else {
                     return ""
                 }

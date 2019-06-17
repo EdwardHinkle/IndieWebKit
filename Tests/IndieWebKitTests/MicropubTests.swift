@@ -1,10 +1,11 @@
 import XCTest
 @testable import IndieWebKit
 
+let micropubRocksClient = "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y"
+let micropubEndpoint = URL(string: "\(micropubRocksClient)/micropub")!
+let accessToken = "BGp5NuExxhtVYiukM0NlC4mr3mczuMt8vxvNlUMkmaUMqKXdh6pUpmOZGd5dniVr257CyS4WKP4jgssd7JPx4CHln260pw0jQpL11bworiQ0E19b7xNnWMtCJX265XTq"
+
 final class MicropubTests: XCTestCase {
-    
-    let micropubEndpoint = URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/micropub")!
-    let accessToken = "BGp5NuExxhtVYiukM0NlC4mr3mczuMt8vxvNlUMkmaUMqKXdh6pUpmOZGd5dniVr257CyS4WKP4jgssd7JPx4CHln260pw0jQpL11bworiQ0E19b7xNnWMtCJX265XTq"
     
     // Micropub.rocks 100 - Create an h-entry post (form-encoded)
     func testCreateFormEncodedHEntryPost() {
@@ -21,7 +22,7 @@ final class MicropubTests: XCTestCase {
         try! micropub.getConfigQuery { config in
             XCTAssertNotNil(config)
             XCTAssertNotNil(config!.mediaEndpoint)
-            XCTAssertEqual(config!.mediaEndpoint, URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/media")!)
+            XCTAssertEqual(config!.mediaEndpoint, URL(string: "\(micropubRocksClient)/media")!)
             XCTAssertNotNil(config!.syndicateTo)
             XCTAssertEqual(config!.syndicateTo?.count, 1)
             XCTAssertEqual(config!.syndicateTo?[0].uid, "https://news.indieweb.org/en")
@@ -88,7 +89,7 @@ final class MicropubTests: XCTestCase {
     // Micropub.rocks test 500
     func testMicropubDelete() {
         let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
-        let post = MicropubPost(url: URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/500/pcEn5Mps")!)
+        let post = MicropubPost(url: URL(string: "\(micropubRocksClient)/500/ZZLy8uMe")!)
         
         let waiting = expectation(description: "Send Micropub Request")
         try! micropub.sendMicropubPost(post, as: .FormEncoded, with: .delete) { postUrl in
@@ -105,12 +106,42 @@ final class MicropubTests: XCTestCase {
     // Micropub.rocks test 502
     func testMicropubUndelete() {
         let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
-        let post = MicropubPost(url: URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/502/tNvJstBE")!)
+        let post = MicropubPost(url: URL(string: "\(micropubRocksClient)/502/mk1U37Oz")!)
         
         let waiting = expectation(description: "Send Micropub Request")
         try! micropub.sendMicropubPost(post, as: .FormEncoded, with: .undelete) { postUrl in
             XCTAssertNotNil(postUrl)
             XCTAssertEqual(postUrl, post.url)
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // Micropub.rocks test 100
+    func testCreateHEntryPostAsFormEncoded() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry, content: "Hello World!")
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .FormEncoded) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/100"))
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // Micropub.rocks test 101
+    func testCreateHEntryPostWithCategoriesAsFormEncoded() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry, content: "Hello World!", categories: ["indieweb", "swift", "indiewebkit"])
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .FormEncoded) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/101"))
             waiting.fulfill()
         }
         
