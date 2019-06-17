@@ -182,6 +182,53 @@ final class MicropubTests: XCTestCase {
         waitForExpectations(timeout: 5, handler: nil)
     }
     
+    // Micropub.rocks test 200
+    func testCreateHEntryPostAsJSON() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry, content: "Hello World!")
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .JSON) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/200"))
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // Micropub.rocks test 201
+    func testCreateHEntryPostWithCategoriesAsJSON() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry, content: "Hello World!", categories: ["indieweb", "swift", "indiewebkit"])
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .JSON) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/201"))
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // Micropub.rocks test 203
+    func testCreateHEntryPostWithFileUrlAsJSON() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry,
+                                content: "Hello World!",
+                                externalPhoto: [URL(string: "https://eddiehinkle.com/images/profile.jpg")!])
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .JSON) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/203"))
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
     static var allTests = [
         ("Create form encoded h-entry post", testCreateFormEncodedHEntryPost),
         ("Test Micropub Config", testMicropubConfigMicropubRocks)

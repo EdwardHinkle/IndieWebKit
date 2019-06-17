@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public enum MicropubPostType: String {
+public enum MicropubPostType: String, Codable {
     case entry
     case event
 }

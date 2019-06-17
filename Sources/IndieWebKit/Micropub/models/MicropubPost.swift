@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public struct MicropubPost {
+public struct MicropubPost: Encodable {
     var type: MicropubPostType?
     var url: URL?
     var content: String?
@@ -15,6 +15,60 @@ public struct MicropubPost {
     var externalVideo: [URL]?
     var externalAudio: [URL]?
     var syndicateTo: [SyndicationTarget]?
+    
+    enum CodingKeys: String, CodingKey {
+        case type
+        case properties
+    }
+    
+    enum PropertiesKeys: String, CodingKey {
+        case url
+        case content
+        case categories = "category"
+        case externalPhoto = "photo"
+        case externalVideo = "video"
+        case externalAudio = "audio"
+        case syndicateTo = "mp-syndicate-to"
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        
+        guard type != nil else {
+            throw MicropubError.generalError("Missing h-type!")
+        }
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(["h-\(type!)"], forKey: .type)
+        
+        var properties = container.nestedContainer(keyedBy: PropertiesKeys.self, forKey: .properties)
+        if url != nil {
+            try properties.encode([url], forKey: .url)
+        }
+        
+        if content != nil {
+            try properties.encode([content], forKey: .content)
+        }
+        
+        if categories != nil {
+            try properties.encode(categories, forKey: .categories)
+        }
+        
+        if externalPhoto != nil {
+            try properties.encode(externalPhoto, forKey: .externalPhoto)
+        }
+        
+        if externalVideo != nil {
+            try properties.encode(externalVideo, forKey: .externalVideo)
+        }
+        
+        if externalAudio != nil {
+            try properties.encode(externalAudio, forKey: .externalAudio)
+        }
+        
+        if syndicateTo != nil {
+            try properties.encode(syndicateTo, forKey: .syndicateTo)
+        }
+    }
     
     public func output(as type: MicropubSendType, with action: MicropubActionType?) throws -> Data? {
         
@@ -67,8 +121,7 @@ public struct MicropubPost {
             // TODO: Need to build a multipart data function
              return Data()
         case .JSON:
-            return Data()
-//            return try? JSONEncoder().encode(postBody)
+            return try? JSONEncoder().encode(self)
         }
         
     }
