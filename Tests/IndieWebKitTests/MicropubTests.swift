@@ -148,6 +148,40 @@ final class MicropubTests: XCTestCase {
         waitForExpectations(timeout: 5, handler: nil)
     }
     
+    // Micropub.rocks test 104
+    func testCreateHEntryPostWithFileUrlAsFormEncoded() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry,
+                                content: "Hello World!",
+                                externalPhoto: [URL(string: "https://eddiehinkle.com/images/profile.jpg")!])
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .FormEncoded) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/104"))
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // Micropub.rocks test 105
+    func testCreateHEntryPostWithSyndicationAsFormEncoded() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry,
+                                content: "Hello World!",
+                                syndicateTo: [SyndicationTarget(uid: "https://news.indieweb.org/en", name: "IndieNews", service: nil, user: nil)])
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .FormEncoded) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/105"))
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
     static var allTests = [
         ("Create form encoded h-entry post", testCreateFormEncodedHEntryPost),
         ("Test Micropub Config", testMicropubConfigMicropubRocks)

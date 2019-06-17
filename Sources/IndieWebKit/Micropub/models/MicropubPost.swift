@@ -11,4 +11,8 @@ public struct MicropubPost {
     var url: URL?
     var content: String?
     var categories: [String]?
+    var externalPhoto: [URL]?
+    var externalVideo: [URL]?
+    var externalAudio: [URL]?
+    var syndicateTo: [SyndicationTarget]?
 }

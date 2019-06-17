@@ -79,6 +79,18 @@ public class MicropubSession {
             if post.categories != nil {
                 postBody["category"] = post.categories!
             }
+            if post.externalPhoto != nil {
+                postBody["photo"] = post.externalPhoto!.map { $0.absoluteString }
+            }
+            if post.externalAudio != nil {
+                postBody["audio"] = post.externalAudio!.map { $0.absoluteString }
+            }
+            if post.externalVideo != nil {
+                postBody["video"] = post.externalVideo!.map { $0.absoluteString }
+            }
+            if post.syndicateTo != nil {
+                postBody["mp-syndicate-to"] = post.syndicateTo!.map { $0.uid }
+            }
         }
         
         switch contentType {
