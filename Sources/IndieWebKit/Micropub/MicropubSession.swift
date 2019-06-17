@@ -51,80 +51,8 @@ public class MicropubSession {
         request.addValue(contentType.rawValue, forHTTPHeaderField: "Content-Type")
         request.addValue("IndieWebKit", forHTTPHeaderField: "X-Powered-By")
         
-        var postBody: [String:[String]] = [:]
-        switch action {
-        case .some(let activeAction):
-            postBody["action"] = [activeAction.rawValue]
-            
-            guard post.url != nil else {
-                throw MicropubError.generalError("Trying to send Micropub request \(activeAction.rawValue) without a url property")
-            }
-            
-            switch activeAction {
-            case .delete:
-                postBody["url"] = [post.url!.absoluteString]
-            case .undelete:
-                postBody["url"] = [post.url!.absoluteString]
-            }
-        default:
-            if post.type != nil {
-                postBody["type"] = [post.type!.rawValue]
-            }
-            if post.content != nil {
-                postBody["content"] = [post.content!]
-            }
-            if post.url != nil {
-                postBody["url"] = [post.url!.absoluteString]
-            }
-            if post.categories != nil {
-                postBody["category"] = post.categories!
-            }
-            if post.externalPhoto != nil {
-                postBody["photo"] = post.externalPhoto!.map { $0.absoluteString }
-            }
-            if post.externalAudio != nil {
-                postBody["audio"] = post.externalAudio!.map { $0.absoluteString }
-            }
-            if post.externalVideo != nil {
-                postBody["video"] = post.externalVideo!.map { $0.absoluteString }
-            }
-            if post.syndicateTo != nil {
-                postBody["mp-syndicate-to"] = post.syndicateTo!.map { $0.uid }
-            }
-        }
-        
-        switch contentType {
-        case .FormEncoded:
-            let postBodyString = postBody.map { property, values in
-                if let encodedProperty = property.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
-                    if encodedProperty == "type", values.count > 0 {
-                        return "h=\(values[0].addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"
-                    }
-                    
-                    return values.map { value in
-                        if let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
-                            if values.count == 1 {
-                                return "\(encodedProperty)=\(encodedValue)"
-                            }
-                            return "\(encodedProperty)[]=\(encodedValue)"
-                        }
-                        return ""
-                    }.joined(separator: "&")
-                } else {
-                    return ""
-                }
-            }.joined(separator: "&")
-            print("testing form body")
-            print(postBodyString)
-            request.httpBody = postBodyString.data(using: .utf8, allowLossyConversion: false)
-        case .Multipart:
-            // TODO: Need to build a multipart data function
-            request.httpBody = Data()
-        case .JSON:
-            try request.httpBody = JSONEncoder().encode(postBody)
-        }
-        
-        
+        // TODO: Add proper error catching
+        request.httpBody = try? post.output(as: contentType, with: action)
         return request
     }
     
