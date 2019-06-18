@@ -189,8 +189,8 @@ public class MicropubSession {
     }
     
     // MARK: Source Query
-    func getSourceQuery(for post: MicropubPost, completion: @escaping (([MicropubPost]?) -> ())) throws {
-        let request = try getSourceRequest(for: post)
+    func getSourceQuery(for post: MicropubPost, with properties: [MicropubPost.PropertiesKeys]? = nil, completion: @escaping (([MicropubPost]?) -> ())) throws {
+        let request = try getSourceRequest(for: post, with: properties)
         
         URLSession.shared.dataTask(with: request) { [weak self] body, response, error in
             do {
@@ -225,7 +225,7 @@ public class MicropubSession {
         }
     }
     
-    func getSourceRequest(for post: MicropubPost?) throws -> URLRequest {
+    func getSourceRequest(for post: MicropubPost? = nil, with properties: [MicropubPost.PropertiesKeys]? = nil) throws -> URLRequest {
         guard var configRequestUrl = URLComponents(url: micropubEndpoint, resolvingAgainstBaseURL: false) else {
             throw MicropubError.generalError("Config Query Url Malformed")
         }
@@ -236,6 +236,16 @@ public class MicropubSession {
         
         if post != nil {
             configRequestUrl.queryItems?.append(URLQueryItem(name: "url", value: post!.url?.absoluteString))
+        }
+        
+        if properties != nil {
+            if properties!.count == 1 {
+                configRequestUrl.queryItems?.append(URLQueryItem(name: "properties", value: properties![0].rawValue))
+            } else if properties!.count > 1 {
+                for property in properties! {
+                    configRequestUrl.queryItems?.append(URLQueryItem(name: "properties", value: property.rawValue))
+                }
+            }
         }
         
         var request = URLRequest(url: configRequestUrl.url!)

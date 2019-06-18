@@ -280,6 +280,25 @@ final class MicropubTests: XCTestCase {
         waitForExpectations(timeout: 5, handler: nil)
     }
     
+    // Micropub.rocks test 603
+    func testSourceQuerySomeProperties() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry,
+                                url: URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/602/twS9JbaM")!)
+        
+        let waiting = expectation(description: "Send Source Query")
+        try! micropub.getSourceQuery(for: post, with: [.categories, .content]) { returnedPost in
+            XCTAssertNotNil(returnedPost)
+            XCTAssertEqual(returnedPost!.count, 1)
+            XCTAssertEqual(returnedPost![0].content, "Hello world")
+            XCTAssertNotNil(returnedPost![0].categories)
+            XCTAssertEqual(returnedPost![0].categories!.count, 2)
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
     static var allTests = [
         ("Create form encoded h-entry post", testCreateFormEncodedHEntryPost),
         ("Test Micropub Config", testMicropubConfigMicropubRocks)
