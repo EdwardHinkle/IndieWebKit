@@ -220,8 +220,8 @@ public class MicropubSession {
             return [post]
         } catch DecodingError.keyNotFound(let missingKey, _) {
             throw MicropubError.generalError("Micropub source missing \(missingKey.stringValue) key")
-        } catch {
-            throw MicropubError.generalError("There was an error trying to decode the server response")
+        } catch let error {
+            throw MicropubError.generalError("There was an error trying to decode the server response: \(error)")
         }
     }
     

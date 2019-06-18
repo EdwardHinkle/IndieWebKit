@@ -7,6 +7,6 @@
 
 import Foundation
 public enum MicropubPostType: String, Codable {
-    case entry
-    case event
+    case entry = "h-entry"
+    case event = "h-event"
 }

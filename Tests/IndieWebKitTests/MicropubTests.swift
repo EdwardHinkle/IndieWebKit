@@ -265,15 +265,15 @@ final class MicropubTests: XCTestCase {
     func testSourceQueryAllProperties() {
         let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
         let post = MicropubPost(type: .entry,
-                                url: URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/602/twS9JbaM")!)
+                                url: URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/602/SWLEBPmG")!)
         
         let waiting = expectation(description: "Send Source Query")
         try! micropub.getSourceQuery(for: post) { returnedPost in
             XCTAssertNotNil(returnedPost)
-            XCTAssertEqual(returnedPost!.count, 1)
-            XCTAssertEqual(returnedPost![0].content, "Hello world")
-            XCTAssertNotNil(returnedPost![0].categories)
-            XCTAssertEqual(returnedPost![0].categories!.count, 2)
+            XCTAssertEqual(returnedPost?.count, 1)
+            XCTAssertEqual(returnedPost?[0].content, "Hello world")
+            XCTAssertNotNil(returnedPost?[0].categories)
+            XCTAssertEqual(returnedPost?[0].categories?.count, 2)
             waiting.fulfill()
         }
         
@@ -284,15 +284,14 @@ final class MicropubTests: XCTestCase {
     func testSourceQuerySomeProperties() {
         let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
         let post = MicropubPost(type: .entry,
-                                url: URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/602/twS9JbaM")!)
+                                url: URL(string: "https://micropub.rocks/client/HTSxBUnl2jHeMh1Y/603/ZdIc2DYh")!)
         
         let waiting = expectation(description: "Send Source Query")
-        try! micropub.getSourceQuery(for: post, with: [.categories, .content]) { returnedPost in
+        try! micropub.getSourceQuery(for: post, with: [.content]) { returnedPost in
             XCTAssertNotNil(returnedPost)
-            XCTAssertEqual(returnedPost!.count, 1)
-            XCTAssertEqual(returnedPost![0].content, "Hello world")
-            XCTAssertNotNil(returnedPost![0].categories)
-            XCTAssertEqual(returnedPost![0].categories!.count, 2)
+            XCTAssertEqual(returnedPost?.count, 1)
+            XCTAssertEqual(returnedPost?[0].content, "Hello world")
+            XCTAssertNil(returnedPost?[0].categories)
             waiting.fulfill()
         }
         

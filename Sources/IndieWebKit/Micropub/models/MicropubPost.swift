@@ -35,7 +35,7 @@ public struct MicropubPost: Codable {
     }
     
     public init(type: MicropubPostType?,
-                visibility: MicropubVisibility? = MicropubVisibility.open,
+                visibility: MicropubVisibility? = MicropubVisibility.isPublic,
                 url: URL? = nil,
                 content: String? = nil,
                 htmlContent: String? = nil,
@@ -61,6 +61,20 @@ public struct MicropubPost: Codable {
         
         let values = try decoder.container(keyedBy: CodingKeys.self)
         type = try values.decode([MicropubPostType].self, forKey: .type)[0]
+        
+        let properties = try values.nestedContainer(keyedBy: PropertiesKeys.self, forKey: .properties)
+        
+        url = try? properties.decode([URL].self, forKey: .url)[0]
+        
+        htmlContent = try? properties.decode([[String: String]].self, forKey: .content)[0]["html"]
+        content = try? properties.decode([String].self, forKey: .content)[0]
+        
+        categories = try? properties.decode([String].self, forKey: .categories)
+        externalPhoto = nil
+        externalVideo = nil
+        externalAudio = nil
+        syndicateTo = nil
+        visibility = try? properties.decode([MicropubVisibility].self, forKey: .visibility)[0]
         
         //        guard type != nil else {
         //            throw MicropubError.generalError("Missing h-type!")
@@ -112,7 +126,7 @@ public struct MicropubPost: Codable {
         }
         
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(["h-\(type!)"], forKey: .type)
+        try container.encode([type], forKey: .type)
         
         var properties = container.nestedContainer(keyedBy: PropertiesKeys.self, forKey: .properties)
         if url != nil {

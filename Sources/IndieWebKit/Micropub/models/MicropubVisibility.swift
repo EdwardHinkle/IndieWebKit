@@ -7,8 +7,8 @@
 
 import Foundation
 public enum MicropubVisibility: String, Codable {
-    case open = "public" // Public is a protected keyword in swift
-    case closed = "private" // private is a protected keyword in swift
-    case unlisted
-    case protected
+    case isPublic = "public" // Public is a protected keyword in swift
+    case isPrivate = "private" // private is a protected keyword in swift
+    case isUnlisted = "unlisted"
+    case isProtected = "protected"
 }
