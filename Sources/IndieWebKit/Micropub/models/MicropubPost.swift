@@ -10,10 +10,11 @@ public struct MicropubPost: Encodable {
     var type: MicropubPostType?
     var url: URL?
     var content: String?
+    var htmlContent: String? // Requires JSON
     var categories: [String]?
-    var externalPhoto: [URL]?
-    var externalVideo: [URL]?
-    var externalAudio: [URL]?
+    var externalPhoto: [ExternalFile]?
+    var externalVideo: [ExternalFile]?
+    var externalAudio: [ExternalFile]?
     var syndicateTo: [SyndicationTarget]?
     var visibility: MicropubVisibility?
     
@@ -47,7 +48,9 @@ public struct MicropubPost: Encodable {
             try properties.encode([url], forKey: .url)
         }
         
-        if content != nil {
+        if htmlContent != nil {
+            try properties.encode([["html": htmlContent!]], forKey: .content)
+        } else if content != nil {
             try properties.encode([content], forKey: .content)
         }
         
@@ -110,13 +113,13 @@ public struct MicropubPost: Encodable {
                     postBody.append(createFormEncodedEntry(name: PropertiesKeys.categories.rawValue, value: categories!))
                 }
                 if self.externalPhoto != nil {
-                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.externalPhoto.rawValue, value: externalPhoto!.map { $0.absoluteString }))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.externalPhoto.rawValue, value: externalPhoto!.map { $0.value.absoluteString }))
                 }
                 if self.externalAudio != nil {
-                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.externalAudio.rawValue, value: externalAudio!.map { $0.absoluteString }))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.externalAudio.rawValue, value: externalAudio!.map { $0.value.absoluteString }))
                 }
                 if self.externalVideo != nil {
-                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.externalVideo.rawValue, value: externalVideo!.map { $0.absoluteString }))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.externalVideo.rawValue, value: externalVideo!.map { $0.value.absoluteString }))
                 }
                 if self.syndicateTo != nil {
                     postBody.append(createFormEncodedEntry(name: PropertiesKeys.syndicateTo.rawValue, value: syndicateTo!.map { $0.uid }))

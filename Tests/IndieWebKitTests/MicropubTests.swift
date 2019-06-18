@@ -153,7 +153,7 @@ final class MicropubTests: XCTestCase {
         let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
         let post = MicropubPost(type: .entry,
                                 content: "Hello World!",
-                                externalPhoto: [URL(string: "https://eddiehinkle.com/images/profile.jpg")!])
+                                externalPhoto: [ExternalFile(value: URL(string: "https://eddiehinkle.com/images/profile.jpg")!)])
         
         let waiting = expectation(description: "Send Micropub Request")
         try! micropub.sendMicropubPost(post, as: .FormEncoded) { postUrl in
@@ -217,12 +217,44 @@ final class MicropubTests: XCTestCase {
         let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
         let post = MicropubPost(type: .entry,
                                 content: "Hello World!",
-                                externalPhoto: [URL(string: "https://eddiehinkle.com/images/profile.jpg")!])
+                                externalPhoto: [ExternalFile(value: URL(string: "https://eddiehinkle.com/images/profile.jpg")!)])
         
         let waiting = expectation(description: "Send Micropub Request")
         try! micropub.sendMicropubPost(post, as: .JSON) { postUrl in
             XCTAssertNotNil(postUrl)
             XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/203"))
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // Micropub.rocks test 202
+    func testCreateHEntryPostWithHTMLAsJSON() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry,
+                                htmlContent: "<b>Testing</b>")
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .JSON) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/202"))
+            waiting.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+    }
+    
+    // Micropub.rocks test 205
+    func testCreateHEntryPostWithPhotoAltTextAsJSON() {
+        let micropub = MicropubSession(to: micropubEndpoint, with: accessToken)
+        let post = MicropubPost(type: .entry,
+                                externalPhoto: [ExternalFile(value: URL(string: "https://eddiehinkle.com/images/profile.jpg")!, alt: "Alt Text")])
+        
+        let waiting = expectation(description: "Send Micropub Request")
+        try! micropub.sendMicropubPost(post, as: .JSON) { postUrl in
+            XCTAssertNotNil(postUrl)
+            XCTAssertTrue(postUrl!.absoluteString.hasPrefix("\(micropubRocksClient)/205"))
             waiting.fulfill()
         }
         
