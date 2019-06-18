@@ -187,6 +187,63 @@ public class MicropubSession {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         return request
     }
+    
+    // MARK: Source Query
+    func getSourceQuery(for post: MicropubPost, completion: @escaping (([MicropubPost]?) -> ())) throws {
+        let request = try getSourceRequest(for: post)
+        
+        URLSession.shared.dataTask(with: request) { [weak self] body, response, error in
+            do {
+                let post = try self?.parseSourceResponse(body: body, response: response, error: error)
+                completion(post)
+            } catch MicropubError.generalError(let error) {
+                print("Error Catching Source Request \(error)")
+                completion(nil)
+            } catch {
+                print("Uncaught error")
+                completion(nil)
+            }
+            }.resume()
+    }
+    
+    func parseSourceResponse(body: Data?, response: URLResponse?, error: Error?) throws -> [MicropubPost] {
+        guard body != nil else {
+            throw MicropubError.generalError("Micropub Source Request didn't return anything")
+        }
+        
+        guard error == nil else {
+            throw MicropubError.generalError(error!.localizedDescription)
+        }
+        
+        do {
+            let post = try JSONDecoder().decode(MicropubPost.self, from: body!)
+            return [post]
+        } catch DecodingError.keyNotFound(let missingKey, _) {
+            throw MicropubError.generalError("Micropub source missing \(missingKey.stringValue) key")
+        } catch {
+            throw MicropubError.generalError("There was an error trying to decode the server response")
+        }
+    }
+    
+    func getSourceRequest(for post: MicropubPost?) throws -> URLRequest {
+        guard var configRequestUrl = URLComponents(url: micropubEndpoint, resolvingAgainstBaseURL: false) else {
+            throw MicropubError.generalError("Config Query Url Malformed")
+        }
+        
+        configRequestUrl.queryItems = [
+            URLQueryItem(name: "q", value: MicropubQueryType.source.rawValue)
+        ]
+        
+        if post != nil {
+            configRequestUrl.queryItems?.append(URLQueryItem(name: "url", value: post!.url?.absoluteString))
+        }
+        
+        var request = URLRequest(url: configRequestUrl.url!)
+        request.httpMethod = "GET"
+        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        return request
+    }
    
 //    func getVerificationRequest(with code: String) throws -> URLRequest {
 //        var request = URLRequest(url: authorizationEndpoint)

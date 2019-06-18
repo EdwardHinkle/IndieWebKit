@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public struct MicropubPost: Encodable {
+public struct MicropubPost: Codable {
     var type: MicropubPostType?
     var url: URL?
     var content: String?
@@ -32,6 +32,77 @@ public struct MicropubPost: Encodable {
         case externalAudio = "audio"
         case syndicateTo = "mp-syndicate-to"
         case visibility
+    }
+    
+    public init(type: MicropubPostType?,
+                visibility: MicropubVisibility? = MicropubVisibility.open,
+                url: URL? = nil,
+                content: String? = nil,
+                htmlContent: String? = nil,
+                categories: [String]? = nil,
+                externalPhoto: [ExternalFile]? = nil,
+                externalVideo: [ExternalFile]? = nil,
+                externalAudio: [ExternalFile]? = nil,
+                syndicateTo: [SyndicationTarget]? = nil) {
+        
+        self.type = type
+        self.visibility = visibility
+        self.url = url
+        self.content = content
+        self.htmlContent = htmlContent
+        self.categories = categories
+        self.externalPhoto = externalPhoto
+        self.externalVideo = externalVideo
+        self.externalAudio = externalAudio
+        self.syndicateTo = syndicateTo
+    }
+    
+    public init(from decoder: Decoder) throws {
+        
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        type = try values.decode([MicropubPostType].self, forKey: .type)[0]
+        
+        //        guard type != nil else {
+        //            throw MicropubError.generalError("Missing h-type!")
+        //        }
+        //
+        //        var container = encoder.container(keyedBy: CodingKeys.self)
+        //        try container.encode(["h-\(type!)"], forKey: .type)
+        //
+        //        var properties = container.nestedContainer(keyedBy: PropertiesKeys.self, forKey: .properties)
+        //        if url != nil {
+        //            try properties.encode([url], forKey: .url)
+        //        }
+        //
+        //        if htmlContent != nil {
+        //            try properties.encode([["html": htmlContent!]], forKey: .content)
+        //        } else if content != nil {
+        //            try properties.encode([content], forKey: .content)
+        //        }
+        //
+        //        if categories != nil {
+        //            try properties.encode(categories, forKey: .categories)
+        //        }
+        //
+        //        if externalPhoto != nil {
+        //            try properties.encode(externalPhoto, forKey: .externalPhoto)
+        //        }
+        //
+        //        if externalVideo != nil {
+        //            try properties.encode(externalVideo, forKey: .externalVideo)
+        //        }
+        //
+        //        if externalAudio != nil {
+        //            try properties.encode(externalAudio, forKey: .externalAudio)
+        //        }
+        //
+        //        if syndicateTo != nil {
+        //            try properties.encode(syndicateTo, forKey: .syndicateTo)
+        //        }
+        //
+        //        if visibility != nil {
+        //            try properties.encode(visibility, forKey: .visibility)
+        //        }
     }
     
     public func encode(to encoder: Encoder) throws {
