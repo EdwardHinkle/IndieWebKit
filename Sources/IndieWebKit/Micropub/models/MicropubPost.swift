@@ -15,6 +15,7 @@ public struct MicropubPost: Encodable {
     var externalVideo: [URL]?
     var externalAudio: [URL]?
     var syndicateTo: [SyndicationTarget]?
+    var visibility: MicropubVisibility?
     
     enum CodingKeys: String, CodingKey {
         case type
@@ -29,6 +30,7 @@ public struct MicropubPost: Encodable {
         case externalVideo = "video"
         case externalAudio = "audio"
         case syndicateTo = "mp-syndicate-to"
+        case visibility
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -68,6 +70,10 @@ public struct MicropubPost: Encodable {
         if syndicateTo != nil {
             try properties.encode(syndicateTo, forKey: .syndicateTo)
         }
+        
+        if visibility != nil {
+            try properties.encode(visibility, forKey: .visibility)
+        }
     }
     
     public func output(as type: MicropubSendType, with action: MicropubActionType?) throws -> Data? {
@@ -87,32 +93,36 @@ public struct MicropubPost: Encodable {
                 switch activeAction {
                 case .delete: fallthrough
                 case .undelete:
-                    postBody.append(createFormEncodedEntry(name: "url", value: url!.absoluteString))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.url.rawValue, value: url!.absoluteString))
                 }
             default:
                 if self.type != nil {
+                    // The name on this item has to be a string of "h" because the CodingKey is the json version ("type")
                     postBody.append(createFormEncodedEntry(name: "h", value: self.type!.rawValue))
                 }
                 if self.content != nil {
-                    postBody.append(createFormEncodedEntry(name: "content", value: content!))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.content.rawValue, value: content!))
                 }
                 if self.url != nil {
-                    postBody.append(createFormEncodedEntry(name: "url", value: url!.absoluteString))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.url.rawValue, value: url!.absoluteString))
                 }
                 if self.categories != nil {
-                    postBody.append(createFormEncodedEntry(name: "category", value: categories!))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.categories.rawValue, value: categories!))
                 }
                 if self.externalPhoto != nil {
-                    postBody.append(createFormEncodedEntry(name: "photo", value: externalPhoto!.map { $0.absoluteString }))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.externalPhoto.rawValue, value: externalPhoto!.map { $0.absoluteString }))
                 }
                 if self.externalAudio != nil {
-                    postBody.append(createFormEncodedEntry(name: "audio", value: externalAudio!.map { $0.absoluteString }))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.externalAudio.rawValue, value: externalAudio!.map { $0.absoluteString }))
                 }
                 if self.externalVideo != nil {
-                    postBody.append(createFormEncodedEntry(name: "video", value: externalVideo!.map { $0.absoluteString }))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.externalVideo.rawValue, value: externalVideo!.map { $0.absoluteString }))
                 }
                 if self.syndicateTo != nil {
-                    postBody.append(createFormEncodedEntry(name: "mp-syndicate-to", value: syndicateTo!.map { $0.uid }))
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.syndicateTo.rawValue, value: syndicateTo!.map { $0.uid }))
+                }
+                if self.visibility != nil {
+                    postBody.append(createFormEncodedEntry(name: PropertiesKeys.visibility.rawValue, value: visibility!.rawValue))
                 }
             }
             
