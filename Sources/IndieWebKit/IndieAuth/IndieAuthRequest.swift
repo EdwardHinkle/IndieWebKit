@@ -324,4 +324,28 @@ public class IndieAuthRequest {
         
         return codeChallenge! == testChallenge
     }
+    
+    public static func revokeToken(_ accessToken: String, for tokenEndpoint: URL, completion: @escaping (Bool) -> ()) {
+        var request = URLRequest(url: tokenEndpoint)
+        request.httpMethod = "POST"
+        request.addValue(MicropubSendType.FormEncoded.rawValue, forHTTPHeaderField: "Content-Type")
+        request.addValue(MicropubSendType.JSON.rawValue, forHTTPHeaderField: "Accept")
+        request.httpBody = "action=revoke&token=\(accessToken)".data(using: .utf8, allowLossyConversion: false)
+        
+        URLSession.shared.dataTask(with: request) { body, response, error in
+            guard error == nil else {
+                // TODO: Add error
+                completion(false)
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                // TODO: Add error
+                completion(false)
+                return
+            }
+            
+            completion(httpResponse.statusCode == 200)
+        }
+    }
 }

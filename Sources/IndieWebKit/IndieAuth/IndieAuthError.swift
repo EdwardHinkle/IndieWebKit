@@ -9,4 +9,5 @@ import Foundation
 enum IndieAuthError: Error {
     case authenticationError(String)
     case authorizationError(String)
+    case revocationError(String)
 }
