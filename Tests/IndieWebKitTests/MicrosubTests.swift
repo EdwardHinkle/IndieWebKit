@@ -250,4 +250,46 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("channel=\(blockListChannel)"))
     }
     
+    func testCreateChannelRequest() {
+        let channelName = "ANewChannelName"
+        
+        let action = MicrosubChannelModifyAction(create: channelName)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=channels"))
+        XCTAssertTrue(body!.contains("name=\(channelName)"))
+    }
+    
+    func testUpdateChannelRequest() {
+        let channelName = "ANewChannelName"
+        let channelId = "theChannelId"
+        
+        let action = MicrosubChannelModifyAction(update: channelId, with: channelName)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=channels"))
+        XCTAssertTrue(body!.contains("name=\(channelName)"))
+        XCTAssertTrue(body!.contains("channel=\(channelId)"))
+    }
+    
+    func testDeleteChannelRequest() {
+        let channelId = "channelIdToRemove"
+        
+        let action = MicrosubChannelModifyAction(delete: channelId)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=channels"))
+        XCTAssertTrue(body!.contains("method=delete"))
+        XCTAssertTrue(body!.contains("channel=\(channelId)"))
+    }
+    
 }
