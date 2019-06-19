@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public struct MicrosubChannelAction: MicrosubAction {
+public struct MicrosubChannelEffectAction: MicrosubAction {
     var action: MicrosubActionType
     var channel: String
     var url: URL? = nil

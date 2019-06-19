@@ -6,20 +6,28 @@
 //
 
 import Foundation
-public struct MicrosubChannelModifyAction: MicrosubAction {
+public struct MicrosubChannelAction: MicrosubAction {
     let action = "channels"
     var name: String?
     var channel: String?
     var method: String?
     
+    init() {
+        self.name = nil
+        self.channel = nil
+        self.method = nil
+    }
+    
     init(create name: String) {
         self.name = name
         self.channel = nil
+        self.method = nil
     }
     
     init(update channel: String, with name: String) {
         self.name = name
         self.channel = channel
+        self.method = nil
     }
     
     init(delete channel: String) {
@@ -29,6 +37,13 @@ public struct MicrosubChannelModifyAction: MicrosubAction {
     }
     
     public func httpMethodForRequest() -> HTTPMethod {
+        if  self.name == nil,
+            self.channel == nil,
+            self.method == nil {
+            
+            return .GET
+        }
+        
         return .POST
     }
     

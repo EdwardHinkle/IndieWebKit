@@ -135,7 +135,7 @@ final class MicrosubTests: XCTestCase {
         let followUrl = URL(string: "https://eddiehinkle.com/timeline")!
         let followChannel = "channelToFollowIn"
         
-        let action = MicrosubChannelAction(action: .follow, channel: followChannel, url: followUrl)
+        let action = MicrosubChannelEffectAction(action: .follow, channel: followChannel, url: followUrl)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -150,7 +150,7 @@ final class MicrosubTests: XCTestCase {
         let unfollowUrl = URL(string: "https://eddiehinkle.com/timeline")!
         let unfollowChannel = "channelToUnfollowIn"
         
-        let action = MicrosubChannelAction(action: .unfollow, channel: unfollowChannel, url: unfollowUrl)
+        let action = MicrosubChannelEffectAction(action: .unfollow, channel: unfollowChannel, url: unfollowUrl)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -164,7 +164,7 @@ final class MicrosubTests: XCTestCase {
     func testGetFollowingListRequest() {
         let followChannel = "channelToFollowIn"
         
-        let action = MicrosubChannelAction(action: .follow, channel: followChannel)
+        let action = MicrosubChannelEffectAction(action: .follow, channel: followChannel)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
 
@@ -179,7 +179,7 @@ final class MicrosubTests: XCTestCase {
         let muteChannel = "channelToMuteIn"
         let muteAction = MicrosubActionType.mute
         
-        let action = MicrosubChannelAction(action: muteAction, channel: muteChannel, url: muteUrl)
+        let action = MicrosubChannelEffectAction(action: muteAction, channel: muteChannel, url: muteUrl)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -195,7 +195,7 @@ final class MicrosubTests: XCTestCase {
         let unmuteChannel = "channelToMuteIn"
         let unmuteAction = MicrosubActionType.unmute
         
-        let action = MicrosubChannelAction(action: unmuteAction, channel: unmuteChannel, url: unmuteUrl)
+        let action = MicrosubChannelEffectAction(action: unmuteAction, channel: unmuteChannel, url: unmuteUrl)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -210,7 +210,7 @@ final class MicrosubTests: XCTestCase {
         let muteListChannel = "channelToMuteIn"
         let muteListAction = MicrosubActionType.mute
         
-        let action = MicrosubChannelAction(action: muteListAction, channel: muteListChannel)
+        let action = MicrosubChannelEffectAction(action: muteListAction, channel: muteListChannel)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -225,7 +225,7 @@ final class MicrosubTests: XCTestCase {
         let blockChannel = "channelToMuteIn"
         let blockAction = MicrosubActionType.block
         
-        let action = MicrosubChannelAction(action: blockAction, channel: blockChannel, url: blockUrl)
+        let action = MicrosubChannelEffectAction(action: blockAction, channel: blockChannel, url: blockUrl)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -240,7 +240,7 @@ final class MicrosubTests: XCTestCase {
         let blockListChannel = "channelToMuteIn"
         let blockListAction = MicrosubActionType.block
         
-        let action = MicrosubChannelAction(action: blockListAction, channel: blockListChannel)
+        let action = MicrosubChannelEffectAction(action: blockListAction, channel: blockListChannel)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -250,10 +250,23 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("channel=\(blockListChannel)"))
     }
     
+    func testGetChannelRequest() {
+        let action = MicrosubChannelAction()
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "GET")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=channels"))
+        XCTAssertFalse(body!.contains("name="))
+        XCTAssertFalse(body!.contains("channel="))
+        XCTAssertFalse(body!.contains("method="))
+    }
+    
     func testCreateChannelRequest() {
         let channelName = "ANewChannelName"
         
-        let action = MicrosubChannelModifyAction(create: channelName)
+        let action = MicrosubChannelAction(create: channelName)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -261,13 +274,15 @@ final class MicrosubTests: XCTestCase {
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=channels"))
         XCTAssertTrue(body!.contains("name=\(channelName)"))
+        XCTAssertFalse(body!.contains("channel="))
+        XCTAssertFalse(body!.contains("method="))
     }
     
     func testUpdateChannelRequest() {
         let channelName = "ANewChannelName"
         let channelId = "theChannelId"
         
-        let action = MicrosubChannelModifyAction(update: channelId, with: channelName)
+        let action = MicrosubChannelAction(update: channelId, with: channelName)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -276,12 +291,13 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("action=channels"))
         XCTAssertTrue(body!.contains("name=\(channelName)"))
         XCTAssertTrue(body!.contains("channel=\(channelId)"))
+        XCTAssertFalse(body!.contains("method="))
     }
     
     func testDeleteChannelRequest() {
         let channelId = "channelIdToRemove"
         
-        let action = MicrosubChannelModifyAction(delete: channelId)
+        let action = MicrosubChannelAction(delete: channelId)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
@@ -290,6 +306,7 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("action=channels"))
         XCTAssertTrue(body!.contains("method=delete"))
         XCTAssertTrue(body!.contains("channel=\(channelId)"))
+        XCTAssertFalse(body!.contains("name="))
     }
     
     func testReorderChannelsRequest() {
