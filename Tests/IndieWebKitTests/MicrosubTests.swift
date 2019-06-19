@@ -208,7 +208,7 @@ final class MicrosubTests: XCTestCase {
     
     func testGetMuteListRequest() {
         let muteListChannel = "channelToMuteIn"
-        let muteListAction = MicrosubActionType.unmute
+        let muteListAction = MicrosubActionType.mute
         
         let action = MicrosubChannelAction(action: muteListAction, channel: muteListChannel)
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
@@ -218,6 +218,36 @@ final class MicrosubTests: XCTestCase {
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=\(muteListAction.rawValue)"))
         XCTAssertTrue(body!.contains("channel=\(muteListChannel)"))
+    }
+    
+    func testBlockRequest() {
+        let blockUrl = URL(string: "https://eddiehinkle.com/timeline")!
+        let blockChannel = "channelToMuteIn"
+        let blockAction = MicrosubActionType.block
+        
+        let action = MicrosubChannelAction(action: blockAction, channel: blockChannel, url: blockUrl)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=\(blockAction.rawValue)"))
+        XCTAssertTrue(body!.contains("channel=\(blockChannel)"))
+        XCTAssertTrue(body!.contains("url=\(blockUrl.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
+    }
+    
+    func testGetBlockListRequest() {
+        let blockListChannel = "channelToMuteIn"
+        let blockListAction = MicrosubActionType.block
+        
+        let action = MicrosubChannelAction(action: blockListAction, channel: blockListChannel)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "GET")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=\(blockListAction.rawValue)"))
+        XCTAssertTrue(body!.contains("channel=\(blockListChannel)"))
     }
     
 }
