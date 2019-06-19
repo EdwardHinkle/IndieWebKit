@@ -20,8 +20,8 @@ public struct MicrosubTimelineAction: MicrosubAction {
         self.lastReadEntry = nil
     }
     
-    public init(with method: MicrosubTimelineMethodType, for channel: String, before entry: String) {
-        self.method = method
+    public init(markAsReadIn channel: String, before entry: String) {
+        self.method = MicrosubTimelineMethodType.markRead
         self.channel = channel
         self.lastReadEntry = entry
         self.entries = nil
