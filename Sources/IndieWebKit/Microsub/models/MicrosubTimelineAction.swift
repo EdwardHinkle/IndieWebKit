@@ -7,7 +7,7 @@
 
 import Foundation
 public struct MicrosubTimelineAction: Codable {
-    var action: String = "timeline"
+    let action = "timeline"
     var method: MicrosubTimelineMethodType
     var channel: String
     var entries: [String]?
