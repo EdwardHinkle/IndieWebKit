@@ -6,7 +6,7 @@ let microsubAccessToken = "odiajiosdjoasijdioasjdoij"
 
 final class MicrosubTests: XCTestCase {
     
-    func testMicrosubRequestHeaders() {
+    func testMicrosubRequestHeadersRequest() {
         let action = MicrosubTimelineAction(markAsReadIn: "channelTestName", before: "LastEntryId")
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         
@@ -17,7 +17,7 @@ final class MicrosubTests: XCTestCase {
         XCTAssertEqual(headers!["Authorization"], "Bearer \(microsubAccessToken)")
     }
     
-    func testMarkLastEntriesAsRead() {
+    func testMarkLastEntriesAsReadRequest() {
         let action = MicrosubTimelineAction(markAsReadIn: "channelTestName", before: "LastEntryId")
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
@@ -29,7 +29,7 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("last_read_entry=LastEntryId"))
     }
     
-    func testMarkMultipleEntriesAsRead() {
+    func testMarkMultipleEntriesAsReadRequest() {
         let action = MicrosubTimelineAction(with: .markRead, for: "channelTestName", on: ["entry1", "entry2"])
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
@@ -41,7 +41,7 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("entry[]=entry1&entry[]=entry2"))
     }
     
-    func testMarkMultipleEntriesAsUnread() {
+    func testMarkMultipleEntriesAsUnreadRequest() {
         let action = MicrosubTimelineAction(with: .markUnread, for: "channelTestName", on: ["entry1", "entry2"])
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
@@ -53,7 +53,7 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("entry[]=entry1&entry[]=entry2"))
     }
     
-    func testMarkSingleEntryAsRead() {
+    func testMarkSingleEntryAsReadRequest() {
         let action = MicrosubTimelineAction(with: .markRead, for: "channelTestName", on: ["entryId"])
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
@@ -65,7 +65,7 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("entry=entryId"))
     }
     
-    func testMarkSingleEntryAsUnread() {
+    func testMarkSingleEntryAsUnreadRequest() {
         let action = MicrosubTimelineAction(with: .markUnread, for: "channelTestName", on: ["entryId"])
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
@@ -77,7 +77,7 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("entry=entryId"))
     }
     
-    func testRemoveEntryFromChannel() {
+    func testRemoveEntryFromChannelRequest() {
         let action = MicrosubTimelineAction(with: .remove, for: "channelTestName", on: ["entryId"])
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
@@ -89,7 +89,7 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("entry=entryId"))
     }
     
-    func testRemoveMultipleEntriesFromChannel() {
+    func testRemoveMultipleEntriesFromChannelRequest() {
         let action = MicrosubTimelineAction(with: .remove, for: "channelTestName", on: ["entry1", "entry2"])
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
@@ -99,6 +99,28 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("method=remove"))
         XCTAssertTrue(body!.contains("channel=channelTestName"))
         XCTAssertTrue(body!.contains("entry[]=entry1&entry[]=entry2"))
+    }
+    
+    func testSearchFeedsRequest() {
+        let searchDomain = "eddiehinkle.com"
+        let action = MicrosubSearchAction(query: searchDomain)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=search"))
+        XCTAssertTrue(body!.contains("query=\(searchDomain.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
+    }
+    
+    func testPreviewFeedsRequest() {
+        let previewUrl = URL(string: "https://eddiehinkle.com/timeline")!
+        let action = MicrosubPreviewAction(url: previewUrl)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=preview"))
+        XCTAssertTrue(body!.contains("url=\(previewUrl.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
     }
     
 }
