@@ -292,4 +292,18 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("channel=\(channelId)"))
     }
     
+    func testReorderChannelsRequest() {
+        let channels = ["channelB", "channelC", "channelA", "channelD"]
+        
+        let action = MicrosubChannelReorderAction(channels: channels)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=channels"))
+        XCTAssertTrue(body!.contains("method=order"))
+        XCTAssertTrue(body!.contains(channels.map { "channels[]=\($0)" }.joined(separator: "&")))
+    }
+    
 }
