@@ -39,7 +39,7 @@ func appNameAndVersion() -> String {
         return "IndieWebKit"
     }
     
-    return "\(name)/\(version)"
+    return "\(name ?? "")/\(version ?? "")"
 }
 
 func UAString() -> String {

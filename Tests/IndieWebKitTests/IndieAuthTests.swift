@@ -84,10 +84,13 @@ final class IndieAuthTests: XCTestCase {
         let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
         let discovery = ProfileDiscoveryRequest(for: profile)
         discovery.start {
-            XCTAssertEqual(discovery.endpoints, profileKnownEndpoints)
+            XCTAssertEqual(discovery.endpoints[EndpointType.authorization_endpoint], profileKnownEndpoints[EndpointType.authorization_endpoint])
+            XCTAssertEqual(discovery.endpoints[EndpointType.token_endpoint], profileKnownEndpoints[EndpointType.token_endpoint])
+            XCTAssertEqual(discovery.endpoints[EndpointType.micropub], profileKnownEndpoints[EndpointType.micropub])
+            XCTAssertEqual(discovery.endpoints[EndpointType.microsub], profileKnownEndpoints[EndpointType.microsub])
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5, handler: nil)
     }
     
@@ -128,6 +131,378 @@ final class IndieAuthTests: XCTestCase {
     
         waitForExpectations(timeout: 5, handler: nil)
     }
+    
+    func testProfileDiscoveryEndpointsRelative() {
+        
+        let profile = URL(string: "https://vanderven.se/martijn/")!
+        let profileKnownEndpoints = [EndpointType.authorization_endpoint: URL(string: "https://vanderven.se/martijn/auth/")!,
+                                     EndpointType.webmention: URL(string: "https://vanderven.se/martijn/mention.php")!]
+        
+//        let discovery = ProfileDiscoveryRequest(for: profile)
+//        discovery.parseSiteData(response: HTTPURLResponse(), htmlData: nil)
+        
+        let expectation = self.expectation(description: "ProfileDiscovyerEndpoints")
+        let discovery = ProfileDiscoveryRequest(for: profile)
+        discovery.start {
+            XCTAssertEqual(discovery.endpoints, profileKnownEndpoints)
+            expectation.fulfill()
+        }
+        
+        waitForExpectations(timeout: 5, handler: nil)
+        
+    }
+    
+    // IndieAuth Spec 5.2 Building Authentication Request URL
+    // https://indieauth.spec.indieweb.org/#authentication-request
+    func testAuthenticationRequestUrl() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authentication,
+                              for: profile,
+                              at: authorization_endpoint,
+                              clientId: client_id,
+                              redirectUri: redirect_uri,
+                              state: state)
+     
+        XCTAssertTrue(request.url!.absoluteString.hasPrefix("\(authorization_endpoint)?me=\(profile)&client_id=\(client_id)&redirect_uri=\(redirect_uri)&state=\(state)&response_type=id&code_challenge_method=S256&code_challenge="))
+    }
+    
+    // IndieAuth Spec 5.3 Parsing the Authentication Response
+    // https://indieauth.spec.indieweb.org/#authentication-response
+    func testParseAuthenticationResponse() {
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authentication,
+                                        for: profile,
+                                        at: authorization_endpoint,
+                                        clientId: client_id,
+                                        redirectUri: redirect_uri,
+                                        state: state)
+        
+        let authorization_code_from_server = String.randomAlphaNumericString(length: 20)
+        
+        let parsed_authorization_code = request.parseResponse(URL(string: "\(redirect_uri)?code=\(authorization_code_from_server)&state=\(state)")!)
+        XCTAssertEqual(parsed_authorization_code, authorization_code_from_server)
+    }
+    
+    // IndieAuth Spec 5.4 Authorization Code Verification Request
+    // https://indieauth.spec.indieweb.org/#authorization-code-verification
+    func testAuthorizationCodeVerificationRequest() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authentication,
+                                        for: profile,
+                                        at: authorization_endpoint,
+                                        clientId: client_id,
+                                        redirectUri: redirect_uri,
+                                        state: state)
+        
+        let authorization_code = String.randomAlphaNumericString(length: 20)
+        
+        let verificationRequest: URLRequest = try! request.getVerificationRequest(with: authorization_code)
+        
+        XCTAssertEqual(verificationRequest.httpMethod, "POST")
+        XCTAssertEqual(verificationRequest.url, authorization_endpoint)
+        
+        let bodyDictionary = try! JSONDecoder().decode([String:String].self, from: verificationRequest.httpBody!)
+        
+        XCTAssertEqual(bodyDictionary["code"], authorization_code)
+        XCTAssertEqual(bodyDictionary["client_id"], client_id.absoluteString)
+        XCTAssertEqual(bodyDictionary["redirect_uri"], redirect_uri.absoluteString)
+        XCTAssertTrue(request.checkCodeChallenge(bodyDictionary["code_verifier"]!))
+    }
+    
+    // IndieAuth Spec 5.4 Authorization Code Verification Response
+    // https://indieauth.spec.indieweb.org/#authorization-code-verification
+    func testAuthorizationCodeVerificationResponse() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authentication,
+                                        for: profile,
+                                        at: authorization_endpoint,
+                                        clientId: client_id,
+                                        redirectUri: redirect_uri,
+                                        state: state)
+        
+        let sameProfile = profile
+        let responseWithSameProfile = [ "me": sameProfile ]
+        let isValidMe = request.confirmVerificationResponse(responseWithSameProfile)
+        XCTAssertTrue(isValidMe)
+        
+        var subProfile = URLComponents(url: profile, resolvingAgainstBaseURL: false)!
+        subProfile.path = "/path/under"
+        let responseWithSubProfile = [ "me": subProfile.url! ]
+        let isValidMe2 = request.confirmVerificationResponse(responseWithSubProfile)
+        XCTAssertTrue(isValidMe2)
+        
+        let spoofedProfile = URL(string: "https://spoofing.com")!
+        let responseWithSpoofedProfile = [ "me": spoofedProfile ]
+        let isValidMe3 = request.confirmVerificationResponse(responseWithSpoofedProfile)
+        XCTAssertFalse(isValidMe3)
+    }
+    
+    // IndieAuth Spec 6.2.1 Building Authorization Request URL
+    // https://indieauth.spec.indieweb.org/#authorization-request
+    func testAuthorizationRequestUrl() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        let scope = ["create", "update", "delete"]
+        
+        let requestWithoutScope = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        XCTAssertTrue(requestWithoutScope.url!.absoluteString.hasPrefix("\(authorization_endpoint)?me=\(profile)&client_id=\(client_id)&redirect_uri=\(redirect_uri)&state=\(state)&response_type=code&code_challenge_method=S256&code_challenge="))
+        
+        let requestWithScope = IndieAuthRequest(.Authorization,
+                                                   for: profile,
+                                                   at: authorization_endpoint,
+                                                   clientId: client_id,
+                                                   redirectUri: redirect_uri,
+                                                   state: state,
+                                                   scope: scope)
+        
+        XCTAssertTrue(requestWithScope.url!.absoluteString.hasPrefix("\(authorization_endpoint)?me=\(profile)&client_id=\(client_id)&redirect_uri=\(redirect_uri)&state=\(state)&scope=create%20update%20delete&response_type=code&code_challenge_method=S256&code_challenge="))
+    }
+    
+    // IndieAuth Spec 6.2.2 Parsing the Authorization Response
+    // https://indieauth.spec.indieweb.org/#authorization-response
+    func testParseAuthorizationResponse() {
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let authorization_code_from_server = String.randomAlphaNumericString(length: 20)
+        
+        let parsed_authorization_code = request.parseResponse(URL(string: "\(redirect_uri)?code=\(authorization_code_from_server)&state=\(state)")!)
+        XCTAssertEqual(parsed_authorization_code, authorization_code_from_server)
+    }
+    
+    // IndieAuth Spec 6.3.1 Generate Token Request
+    // https://indieauth.spec.indieweb.org/#token-request
+    func testTokenRequest() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       with: token_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let authorization_code = String.randomAlphaNumericString(length: 20)
+        
+        let tokenRequest: URLRequest = try! request.getTokenRequest(with: authorization_code)
+        
+        XCTAssertEqual(tokenRequest.httpMethod, "POST")
+        XCTAssertEqual(tokenRequest.url, token_endpoint)
+        
+        let bodyDictionary = try! JSONDecoder().decode([String:String].self, from: tokenRequest.httpBody!)
+        
+        XCTAssertEqual(bodyDictionary["grant_type"], "authorization_code")
+        XCTAssertEqual(bodyDictionary["code"], authorization_code)
+        XCTAssertEqual(bodyDictionary["client_id"], client_id.absoluteString)
+        XCTAssertEqual(bodyDictionary["redirect_uri"], redirect_uri.absoluteString)
+        XCTAssertEqual(bodyDictionary["me"], profile.absoluteString)
+        XCTAssertTrue(request.checkCodeChallenge(bodyDictionary["code_verifier"]!))
+    }
+    
+    // IndieAuth Spec 6.3.3 Access Token Response
+    // https://indieauth.spec.indieweb.org/#access-token-response
+    func testTokenResponse() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       with: token_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let access_token_from_server = String.randomAlphaNumericString(length: 25)
+        let token_type = "Bearer"
+        let scope_from_server = "create update delete"
+        let me_profile = profile
+        
+        let responseFromServer: [String:String] = [
+            "access_token": access_token_from_server,
+            "token_type": token_type,
+            "scope": scope_from_server,
+            "me": me_profile.absoluteString
+        ]
+        
+        let returnData = try! JSONEncoder().encode(responseFromServer)
+        let (tokenType, accessToken) = try! request.parseTokenResponse(returnData)
+        
+        XCTAssertEqual(request.scope.joined(separator: " "), responseFromServer["scope"])
+        XCTAssertEqual(request.profile.absoluteString, responseFromServer["me"])
+        XCTAssertEqual(tokenType, token_type)
+        XCTAssertEqual(accessToken, access_token_from_server)
+    }
+    
+    // IndieAuth Spec 6.3.3 Access Token Response
+    // https://indieauth.spec.indieweb.org/#access-token-response
+    func testTokenResponseWithSubProfile() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       with: token_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let access_token_from_server = String.randomAlphaNumericString(length: 25)
+        let token_type = "Bearer"
+        let scope_from_server = "create update delete"
+        let me_profile = URL(string: "https://eddiehinkle.com/sub/profile")!
+        
+        let responseFromServer: [String:String] = [
+            "access_token": access_token_from_server,
+            "token_type": token_type,
+            "scope": scope_from_server,
+            "me": me_profile.absoluteString
+        ]
+        
+        let returnData = try! JSONEncoder().encode(responseFromServer)
+        let (tokenType, accessToken) = try! request.parseTokenResponse(returnData)
+        
+        XCTAssertEqual(request.scope.joined(separator: " "), responseFromServer["scope"])
+        XCTAssertEqual(request.profile.absoluteString, responseFromServer["me"])
+        XCTAssertEqual(tokenType, token_type)
+        XCTAssertEqual(accessToken, access_token_from_server)
+    }
+    
+    // IndieAuth Spec 6.3.3 Access Token Response
+    // https://indieauth.spec.indieweb.org/#access-token-response
+    func testTokenResponseWithInvalidProfile() {
+        
+        let profile = URL(string: "https://eddiehinkle.com")!
+        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+        let client_id = URL(string: "https://remark.social")!
+        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+        let state = String.randomAlphaNumericString(length: 25)
+        
+        let request = IndieAuthRequest(.Authorization,
+                                       for: profile,
+                                       at: authorization_endpoint,
+                                       with: token_endpoint,
+                                       clientId: client_id,
+                                       redirectUri: redirect_uri,
+                                       state: state)
+        
+        let access_token_from_server = String.randomAlphaNumericString(length: 25)
+        let token_type = "Bearer"
+        let scope_from_server = "create update delete"
+        let me_profile = URL(string: "https://spoofing.com/profile")!
+        
+        let responseFromServer: [String:String] = [
+            "access_token": access_token_from_server,
+            "token_type": token_type,
+            "scope": scope_from_server,
+            "me": me_profile.absoluteString
+        ]
+
+        let returnData = try! JSONEncoder().encode(responseFromServer)
+        var tokenType: String?, accessToken: String?
+        
+        do {
+            (tokenType, accessToken) = try request.parseTokenResponse(returnData)
+        } catch(IndieAuthError.authorizationError(let errorString)) {
+            XCTAssertNotNil(errorString)
+        } catch {
+            // The error that should be caught should be above.
+            // If we reach here, the logic has broken
+            XCTAssertTrue(false)
+        }
+        
+        XCTAssertEqual(request.scope.joined(separator: " "), "")
+        XCTAssertEqual(request.profile.absoluteString, profile.absoluteString)
+        XCTAssertNil(tokenType)
+        XCTAssertNil(accessToken)
+    }
+    
+    // IndieAuth Spec 6.3.5 Request Token Revocation
+    // https://indieauth.spec.indieweb.org/#token-revocation
+    func testTokenRevocationRequest() {
+//        let profile = URL(string: "https://eddiehinkle.com")!
+//        let authorization_endpoint = URL(string: "https://eddiehinkle.com/auth")!
+//        let token_endpoint = URL(string: "https://eddiehinkle.com/auth/token")!
+//        let client_id = URL(string: "https://remark.social")!
+//        let redirect_uri = URL(string: "https://remark.social/ios/callback")!
+//        let state = String.randomAlphaNumericString(length: 25)
+//
+//        let request = IndieAuthRequest(.Authorization,
+//                                       for: profile,
+//                                       at: authorization_endpoint,
+//                                       with: token_endpoint,
+//                                       clientId: client_id,
+//                                       redirectUri: redirect_uri,
+//                                       state: state)
+//
+//        let access_token_from_server = String.randomAlphaNumericString(length: 25)
+//
+//        request.
+    }
+    
+    // TODO: Write a test that returns several of the same endpoint and make sure that the FIRST endpoint is used
     
     static var allTests = [
         ("Test Valid Profile Urls", testValidProfileUrls),

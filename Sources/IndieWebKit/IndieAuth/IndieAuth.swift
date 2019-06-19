@@ -7,7 +7,6 @@
 
 import Foundation
 import Network
-import SwiftSoup
 
 public class IndieAuth {
     
