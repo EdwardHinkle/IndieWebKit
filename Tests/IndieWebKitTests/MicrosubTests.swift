@@ -174,4 +174,50 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("channel=\(followChannel)"))
     }
     
+    func testMuteRequest() {
+        let muteUrl = URL(string: "https://eddiehinkle.com/timeline")!
+        let muteChannel = "channelToMuteIn"
+        let muteAction = MicrosubActionType.mute
+        
+        let action = MicrosubChannelAction(action: muteAction, channel: muteChannel, url: muteUrl)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=\(muteAction.rawValue)"))
+        XCTAssertTrue(body!.contains("channel=\(muteChannel)"))
+        XCTAssertTrue(body!.contains("url=\(muteUrl.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
+    }
+    
+    func testUnmuteFeedRequest() {
+        let unmuteUrl = URL(string: "https://eddiehinkle.com/timeline")!
+        let unmuteChannel = "channelToMuteIn"
+        let unmuteAction = MicrosubActionType.unmute
+        
+        let action = MicrosubChannelAction(action: unmuteAction, channel: unmuteChannel, url: unmuteUrl)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=\(unmuteAction.rawValue)"))
+        XCTAssertTrue(body!.contains("channel=\(unmuteChannel)"))
+        XCTAssertTrue(body!.contains("url=\(unmuteUrl.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
+    }
+    
+    func testGetMuteListRequest() {
+        let muteListChannel = "channelToMuteIn"
+        let muteListAction = MicrosubActionType.unmute
+        
+        let action = MicrosubChannelAction(action: muteListAction, channel: muteListChannel)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "GET")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=\(muteListAction.rawValue)"))
+        XCTAssertTrue(body!.contains("channel=\(muteListChannel)"))
+    }
+    
 }
