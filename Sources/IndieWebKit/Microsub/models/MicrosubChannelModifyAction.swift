@@ -27,4 +27,24 @@ public struct MicrosubChannelModifyAction: MicrosubAction {
         self.channel = channel
         self.method = "delete"
     }
+    
+    public func convertToPostBody() -> Data? {
+        var postBody: [String] = []
+        
+        postBody.append(createFormEncodedEntry(name: "action", value: action))
+        
+        if name != nil {
+            postBody.append(createFormEncodedEntry(name: "name", value: name!))
+        }
+        
+        if channel != nil {
+            postBody.append(createFormEncodedEntry(name: "channel", value: channel!))
+        }
+        
+        if method != nil {
+            postBody.append(createFormEncodedEntry(name: "method", value: method!))
+        }
+        
+        return postBody.joined(separator: "&").data(using: .utf8, allowLossyConversion: false)
+    }
 }

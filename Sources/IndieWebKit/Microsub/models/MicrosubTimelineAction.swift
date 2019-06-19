@@ -26,4 +26,22 @@ public struct MicrosubTimelineAction: MicrosubAction {
         self.lastReadEntry = entry
         self.entries = nil
     }
+    
+    public func convertToPostBody() -> Data? {
+        var postBody: [String] = []
+        
+        postBody.append(createFormEncodedEntry(name: "action", value: action))
+        postBody.append(createFormEncodedEntry(name: "method", value: method.rawValue))
+        postBody.append(createFormEncodedEntry(name: "channel", value: channel))
+        
+        if entries != nil {
+            postBody.append(createFormEncodedEntry(name: "entry", value: entries!))
+        }
+        
+        if lastReadEntry != nil {
+            postBody.append(createFormEncodedEntry(name: "last_read_entry", value: lastReadEntry!))
+        }
+        
+        return postBody.joined(separator: "&").data(using: .utf8, allowLossyConversion: false)
+    }
 }
