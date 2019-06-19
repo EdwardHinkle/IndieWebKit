@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public struct MicrosubSearchAction: Codable {
+public struct MicrosubSearchAction: MicrosubAction {
     let action = "search"
     var query: String
 }

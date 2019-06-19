@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public struct MicrosubTimelineAction: Codable {
+public struct MicrosubTimelineAction: MicrosubAction {
     let action = "timeline"
     var method: MicrosubTimelineMethodType
     var channel: String

@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public struct MicrosubChannelModifyAction: Codable {
+public struct MicrosubChannelModifyAction: MicrosubAction {
     let action = "channels"
     var name: String?
     var channel: String?

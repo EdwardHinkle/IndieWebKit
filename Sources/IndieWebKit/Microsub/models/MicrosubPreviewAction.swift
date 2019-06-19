@@ -6,7 +6,7 @@
 //
 
 import Foundation
-public struct MicrosubPreviewAction: Codable {
+public struct MicrosubPreviewAction: MicrosubAction {
     let action = "preview"
     var url: URL
 }
