@@ -188,6 +188,64 @@ public class MicropubSession {
         return request
     }
     
+    // MARK: Category Query
+    func getCategoryList(completion: @escaping (([String]?) -> ())) throws {
+        let request = try getCategoryListRequest()
+        
+        URLSession.shared.dataTask(with: request) { [weak self] body, response, error in
+            do {
+                let categories = try self?.parseCategoryListResponse(body: body, response: response, error: error)
+                completion(categories)
+            } catch MicropubError.generalError(let error) {
+                print("Error Catching Categories List Request \(error)")
+                completion(nil)
+            } catch {
+                print("Uncaught error")
+                completion(nil)
+            }
+            }.resume()
+    }
+    
+    func parseCategoryListResponse(body: Data?, response: URLResponse?, error: Error?) throws -> [String] {
+        guard body != nil else {
+            throw MicropubError.generalError("Micropub Categories List Request didn't return anything")
+        }
+        
+        guard error == nil else {
+            throw MicropubError.generalError(error!.localizedDescription)
+        }
+        
+        do {
+            let categoryResponse = try JSONDecoder().decode([String:[String]].self, from: body!)
+            
+            if let categories = categoryResponse[MicropubQueryType.category.rawValue] {
+                return categories
+            }
+            
+            return[]
+        } catch DecodingError.keyNotFound(let missingKey, _) {
+            throw MicropubError.generalError("Micropub Config missing \(missingKey.stringValue) key")
+        } catch {
+            throw MicropubError.generalError("There was an error trying to decode the server response")
+        }
+    }
+    
+    func getCategoryListRequest() throws -> URLRequest {
+        guard var configRequestUrl = URLComponents(url: micropubEndpoint, resolvingAgainstBaseURL: false) else {
+            throw MicropubError.generalError("Config Query Url Malformed")
+        }
+        
+        configRequestUrl.queryItems = [
+            URLQueryItem(name: "q", value: MicropubQueryType.category.rawValue)
+        ]
+        
+        var request = URLRequest(url: configRequestUrl.url!)
+        request.httpMethod = "GET"
+        request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        return request
+    }
+    
     // MARK: Source Query
     func getSourceQuery(for post: MicropubPost, with properties: [MicropubPost.PropertiesKeys]? = nil, completion: @escaping (([MicropubPost]?) -> ())) throws {
         let request = try getSourceRequest(for: post, with: properties)
