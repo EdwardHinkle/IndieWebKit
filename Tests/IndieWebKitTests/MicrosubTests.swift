@@ -220,6 +220,22 @@ final class MicrosubTests: XCTestCase {
         XCTAssertTrue(body!.contains("channel=\(muteListChannel)"))
     }
     
+    func testUnblockRequest() {
+        let unblockUrl = URL(string: "https://eddiehinkle.com/timeline")!
+        let unblockChannel = "channelToMuteIn"
+        let unblockAction = MicrosubActionType.block
+        
+        let action = MicrosubChannelEffectAction(action: unblockAction, channel: unblockChannel, url: unblockUrl)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=\(unblockAction.rawValue)"))
+        XCTAssertTrue(body!.contains("channel=\(unblockChannel)"))
+        XCTAssertTrue(body!.contains("url=\(unblockUrl.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
+    }
+    
     func testBlockRequest() {
         let blockUrl = URL(string: "https://eddiehinkle.com/timeline")!
         let blockChannel = "channelToMuteIn"
