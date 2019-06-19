@@ -10,6 +10,10 @@ public struct MicrosubSearchAction: MicrosubAction {
     let action = "search"
     var query: String
     
+    public func httpMethodForRequest() -> HTTPMethod {
+        return .POST
+    }
+    
     public func convertToPostBody() -> Data? {
         var postBody: [String] = []
         

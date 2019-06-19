@@ -9,7 +9,7 @@ import Foundation
 extension MicrosubAction {
     public func generateRequest(for microsubEndpoint: URL, with accessToken: String) throws -> URLRequest {
         var request = URLRequest(url: microsubEndpoint)
-        request.httpMethod = "POST"
+        request.httpMethod = self.httpMethodForRequest().rawValue
         request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.addValue(MicropubSendType.FormEncoded.rawValue, forHTTPHeaderField: "Content-Type")
         request.addValue("IndieWebKit", forHTTPHeaderField: "X-Powered-By")

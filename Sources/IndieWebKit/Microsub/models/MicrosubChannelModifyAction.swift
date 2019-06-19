@@ -28,6 +28,10 @@ public struct MicrosubChannelModifyAction: MicrosubAction {
         self.method = "delete"
     }
     
+    public func httpMethodForRequest() -> HTTPMethod {
+        return .POST
+    }
+    
     public func convertToPostBody() -> Data? {
         var postBody: [String] = []
         

@@ -11,6 +11,10 @@ public struct MicrosubChannelReorderAction: MicrosubAction {
     let method = "order"
     var channels: [String]
     
+    public func httpMethodForRequest() -> HTTPMethod {
+        return .POST
+    }
+    
     public func convertToPostBody() -> Data? {
         var postBody: [String] = []
         

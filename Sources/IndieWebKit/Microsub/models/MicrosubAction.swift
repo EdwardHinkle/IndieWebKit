@@ -8,5 +8,6 @@
 import Foundation
 public protocol MicrosubAction: Codable {
     func generateRequest(for endpoint: URL, with token: String) throws -> URLRequest
+    func httpMethodForRequest() -> HTTPMethod
     func convertToPostBody() -> Data?
 }

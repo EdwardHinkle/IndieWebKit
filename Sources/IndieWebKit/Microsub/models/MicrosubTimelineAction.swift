@@ -27,6 +27,10 @@ public struct MicrosubTimelineAction: MicrosubAction {
         self.entries = nil
     }
     
+    public func httpMethodForRequest() -> HTTPMethod {
+        return .POST
+    }
+    
     public func convertToPostBody() -> Data? {
         var postBody: [String] = []
         

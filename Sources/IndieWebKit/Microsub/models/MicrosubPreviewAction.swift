@@ -10,6 +10,10 @@ public struct MicrosubPreviewAction: MicrosubAction {
     let action = "preview"
     var url: URL
     
+    public func httpMethodForRequest() -> HTTPMethod {
+        return .POST
+    }
+    
     public func convertToPostBody() -> Data? {
         var postBody: [String] = []
         

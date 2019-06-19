@@ -9,7 +9,15 @@ import Foundation
 public struct MicrosubChannelAction: MicrosubAction {
     var action: MicrosubActionType
     var channel: String
-    var url: URL?
+    var url: URL? = nil
+    
+    public func httpMethodForRequest() -> HTTPMethod {
+        if url == nil {
+            return .GET
+        }
+        
+        return .POST
+    }
     
     public func convertToPostBody() -> Data? {
         var postBody: [String] = []

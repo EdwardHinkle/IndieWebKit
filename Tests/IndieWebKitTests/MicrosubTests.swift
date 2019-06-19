@@ -12,7 +12,6 @@ final class MicrosubTests: XCTestCase {
         
         let headers = request.allHTTPHeaderFields
         XCTAssertNotNil(headers)
-        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertEqual(headers!["Content-Type"], MicropubSendType.FormEncoded.rawValue)
         XCTAssertEqual(headers!["Authorization"], "Bearer \(microsubAccessToken)")
     }
@@ -22,6 +21,7 @@ final class MicrosubTests: XCTestCase {
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
+        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=timeline"))
         XCTAssertTrue(body!.contains("method=mark_read"))
@@ -34,6 +34,7 @@ final class MicrosubTests: XCTestCase {
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
+        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=timeline"))
         XCTAssertTrue(body!.contains("method=mark_read"))
@@ -46,6 +47,7 @@ final class MicrosubTests: XCTestCase {
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
+        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=timeline"))
         XCTAssertTrue(body!.contains("method=mark_unread"))
@@ -58,6 +60,7 @@ final class MicrosubTests: XCTestCase {
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
+        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=timeline"))
         XCTAssertTrue(body!.contains("method=mark_read"))
@@ -70,6 +73,7 @@ final class MicrosubTests: XCTestCase {
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
+        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=timeline"))
         XCTAssertTrue(body!.contains("method=mark_unread"))
@@ -82,6 +86,7 @@ final class MicrosubTests: XCTestCase {
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
+        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=timeline"))
         XCTAssertTrue(body!.contains("method=remove"))
@@ -94,6 +99,7 @@ final class MicrosubTests: XCTestCase {
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
+        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=timeline"))
         XCTAssertTrue(body!.contains("method=remove"))
@@ -107,6 +113,7 @@ final class MicrosubTests: XCTestCase {
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
+        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=search"))
         XCTAssertTrue(body!.contains("query=\(searchDomain.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
@@ -118,9 +125,53 @@ final class MicrosubTests: XCTestCase {
         let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
         let body = String(data: request.httpBody!, encoding: .utf8)
         
+        XCTAssertEqual(request.httpMethod, "POST")
         XCTAssertNotNil(body)
         XCTAssertTrue(body!.contains("action=preview"))
         XCTAssertTrue(body!.contains("url=\(previewUrl.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
+    }
+    
+    func testFollowFeedRequest() {
+        let followUrl = URL(string: "https://eddiehinkle.com/timeline")!
+        let followChannel = "channelToFollowIn"
+        
+        let action = MicrosubChannelAction(action: .follow, channel: followChannel, url: followUrl)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=follow"))
+        XCTAssertTrue(body!.contains("channel=\(followChannel)"))
+        XCTAssertTrue(body!.contains("url=\(followUrl.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
+    }
+    
+    func testUnfollowFeedRequest() {
+        let unfollowUrl = URL(string: "https://eddiehinkle.com/timeline")!
+        let unfollowChannel = "channelToUnfollowIn"
+        
+        let action = MicrosubChannelAction(action: .unfollow, channel: unfollowChannel, url: unfollowUrl)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+        
+        XCTAssertEqual(request.httpMethod, "POST")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=unfollow"))
+        XCTAssertTrue(body!.contains("channel=\(unfollowChannel)"))
+        XCTAssertTrue(body!.contains("url=\(unfollowUrl.absoluteString.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)!)"))
+    }
+    
+    func testGetFollowingListRequest() {
+        let followChannel = "channelToFollowIn"
+        
+        let action = MicrosubChannelAction(action: .follow, channel: followChannel)
+        let request = try! action.generateRequest(for: microsubEndpoint, with: microsubAccessToken)
+        let body = String(data: request.httpBody!, encoding: .utf8)
+
+        XCTAssertEqual(request.httpMethod, "GET")
+        XCTAssertNotNil(body)
+        XCTAssertTrue(body!.contains("action=follow"))
+        XCTAssertTrue(body!.contains("channel=\(followChannel)"))
     }
     
 }
