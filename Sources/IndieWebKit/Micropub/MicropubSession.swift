@@ -48,7 +48,11 @@ public class MicropubSession {
         var request = URLRequest(url: micropubEndpoint)
         request.httpMethod = "POST"
         request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        request.addValue(contentType.rawValue, forHTTPHeaderField: "Content-Type")
+        if contentType == .Multipart {
+            request.addValue("\(contentType.rawValue); boundary=\(MicropubPost.multipartBoundary())", forHTTPHeaderField: "Content-Type")
+        } else {
+            request.addValue(contentType.rawValue, forHTTPHeaderField: "Content-Type")
+        }
         request.addValue("IndieWebKit", forHTTPHeaderField: "X-Powered-By")
         
         // TODO: Add proper error catching

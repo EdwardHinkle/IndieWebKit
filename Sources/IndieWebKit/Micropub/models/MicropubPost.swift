@@ -12,6 +12,9 @@ public struct MicropubPost: Codable {
     var content: String?
     var htmlContent: String? // Requires JSON
     var categories: [String]?
+    var internalPhoto: [InternalFile]?
+    var internalVideo: [InternalFile]?
+    var internalAudio: [InternalFile]?
     var externalPhoto: [ExternalFile]?
     var externalVideo: [ExternalFile]?
     var externalAudio: [ExternalFile]?
@@ -30,6 +33,9 @@ public struct MicropubPost: Codable {
         case externalPhoto = "photo"
         case externalVideo = "video"
         case externalAudio = "audio"
+        case internalPhoto = "photo"
+        case internalVideo = "video"
+        case internalAudio = "audio"
         case syndicateTo = "mp-syndicate-to"
         case visibility
     }
@@ -43,6 +49,9 @@ public struct MicropubPost: Codable {
                 externalPhoto: [ExternalFile]? = nil,
                 externalVideo: [ExternalFile]? = nil,
                 externalAudio: [ExternalFile]? = nil,
+                internalPhoto: [InternalFile]? = nil,
+                internalVideo: [InternalFile]? = nil,
+                internalAudio: [InternalFile]? = nil,
                 syndicateTo: [SyndicationTarget]? = nil) {
         
         self.type = type
@@ -54,6 +63,9 @@ public struct MicropubPost: Codable {
         self.externalPhoto = externalPhoto
         self.externalVideo = externalVideo
         self.externalAudio = externalAudio
+        self.internalPhoto = internalPhoto
+        self.internalVideo = internalVideo
+        self.internalAudio = internalAudio
         self.syndicateTo = syndicateTo
     }
     
@@ -73,6 +85,9 @@ public struct MicropubPost: Codable {
         externalPhoto = nil
         externalVideo = nil
         externalAudio = nil
+        internalPhoto = nil
+        internalVideo = nil
+        internalAudio = nil
         syndicateTo = nil
         visibility = try? properties.decode([MicropubVisibility].self, forKey: .visibility)[0]
         
@@ -217,6 +232,18 @@ public struct MicropubPost: Codable {
             return postBody.joined(separator: "&").data(using: .utf8, allowLossyConversion: false)
         case .Multipart:
             // TODO: Need to build a multipart data function
+            var body = NSMutableData()
+            let boundaryPrefix = "--\(MicropubPost.multipartBoundary())\r\n"
+            let filename = "";
+            
+            body.appendString(boundaryPrefix)
+            body.appendString("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
+            body.appendString("Content-Type: \(mimeType)\r\n\r\n")
+            // TODO: Send data here
+            // body.append(internalPhoto) data
+            body.appendString("\r\n")
+            body.appendString("--".appending(MicropubPost.multipartBoundary().appending("--")))
+            
              return Data()
         case .JSON:
             return try? JSONEncoder().encode(self)
@@ -241,5 +268,9 @@ public struct MicropubPost: Codable {
             }
             return ""
         }.joined(separator: "&")
+    }
+    
+    static func multipartBoundary() -> String {
+        return "Boundary-\(UUID().uuidString)"
     }
 }
